@@ -53,23 +53,57 @@ class DRV(object):
         idx = bisect_left(self.cdf, sample)
         return self.__cdf_values[idx]
     def __add__(self, right):
-        return self.apply2(operator.add, right)
+        return self._apply2(operator.add, right)
     def __sub__(self, right):
-        return self.apply2(operator.sub, right)
+        return self._apply2(operator.sub, right)
     def __mul__(self, right):
-        return self.apply2(operator.mul, right)
+        return self._apply2(operator.mul, right)
+    def __rmatmul__(self, left):
+        if not isinstance(left, int):
+            return NotImplemented
+        if left <= 0:
+            raise ValueError(left)
+        result = self
+        for _ in range(left - 1):
+            result += self
+        return result
     def __truediv__(self, right):
-        return self.apply2(operator.truediv, right)
+        return self._apply2(operator.truediv, right)
     def __floordiv__(self, right):
-        return self.apply2(operator.floordiv, right)
+        return self._apply2(operator.floordiv, right)
     def __neg__(self):
         return self.apply(operator.neg)
     def apply(self, func):
-        results = collections.defaultdict(int)
-        for value, prob in self.__dist.items():
-            results[func(value)] += prob
-        return DRV(results)
-    def apply2(self, func, right):
+        """Apply a unary function to the values produced by this DRV."""
+        return DRV._reduced(self.__dist.items(), func)
+    def _apply2(self, func, right):
+        """Apply a binary function, with the values of this DRV on the left."""
         if isinstance(right, DRV):
-            raise NotImplementedError
+            return self._cross_reduce(func, right)
         return self.apply(lambda x: func(x, right))
+    def _cross_reduce(self, func, right):
+        """
+        Take the cross product of self and right, then reduce by applying func.
+        """
+        return DRV._reduced(
+            self._iter_cross(right),
+            lambda value: func(*value),
+        )
+    def _iter_cross(self, right):
+        """
+        Take the cross product of self and right, with probabilities assuming
+        that the two are independent variables.
+
+        Note that the cross product of an object with itself represents the
+        results of sampling it twice, *not* just the pairs (x, x) for each
+        possible value!
+        """
+        for (lvalue, lprob) in self.__dist.items():
+            for (rvalue, rprob) in right.__dist.items():
+                yield ((lvalue, rvalue), lprob * rprob)
+    @staticmethod
+    def _reduced(iterable, func):
+        distribution = collections.defaultdict(int)
+        for value, prob in iterable:
+            distribution[func(value)] += prob
+        return DRV(distribution)
