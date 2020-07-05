@@ -30,12 +30,14 @@ class DRV(object):
         self.__cdf = None
     def to_dict(self):
         return self.__dist.copy()
+    def _items(self):
+        return self.__dist.items()
     @property
     def cdf(self):
         if self.__cdf is None:
             def iter_totals():
                 total = 0
-                for value, probability in self.__dist.items():
+                for value, probability in self._items():
                     total += probability
                     yield value, total
                 # In case of rounding errors
@@ -59,6 +61,7 @@ class DRV(object):
     def __mul__(self, right):
         return self._apply2(operator.mul, right)
     def __rmatmul__(self, left):
+        # Handles integer on the left, DRV on the right.
         if not isinstance(left, int):
             return NotImplemented
         if left <= 0:
@@ -75,6 +78,19 @@ class DRV(object):
                 break
             so_far += so_far
         return result
+    def __matmul__(self, right):
+        # Handles DRV on the left, DRV on the right.
+        if not isinstance(right, DRV):
+            return NotImplemented
+        if not all(isinstance(value, int) for value in self.__dist):
+            raise TypeError('require integers on LHS of @')
+        def iter_drvs():
+            so_far = min(self.__dist) @ right
+            for num_dice in range(min(self.__dist), max(self.__dist) + 1):
+                if num_dice in self.__dist:
+                    yield so_far, self.__dist[num_dice]
+                so_far += right
+        return DRV._weighted_average(iter_drvs())
     def __truediv__(self, right):
         return self._apply2(operator.truediv, right)
     def __floordiv__(self, right):
@@ -83,7 +99,7 @@ class DRV(object):
         return self.apply(operator.neg)
     def apply(self, func):
         """Apply a unary function to the values produced by this DRV."""
-        return DRV._reduced(self.__dist.items(), func)
+        return DRV._reduced(self._items(), func)
     def _apply2(self, func, right):
         """Apply a binary function, with the values of this DRV on the left."""
         if isinstance(right, DRV):
@@ -106,12 +122,21 @@ class DRV(object):
         results of sampling it twice, *not* just the pairs (x, x) for each
         possible value!
         """
-        for (lvalue, lprob) in self.__dist.items():
-            for (rvalue, rprob) in right.__dist.items():
+        for (lvalue, lprob) in self._items():
+            for (rvalue, rprob) in right._items():
                 yield ((lvalue, rvalue), lprob * rprob)
     @staticmethod
-    def _reduced(iterable, func):
+    def _reduced(iterable, func=lambda x: x):
         distribution = collections.defaultdict(int)
         for value, prob in iterable:
             distribution[func(value)] += prob
         return DRV(distribution)
+    @staticmethod
+    def _weighted_average(iterable):
+        def iter_pairs():
+            for drv, weight in iterable:
+                yield from drv._weighted_items(weight)
+        return DRV._reduced(iter_pairs())
+    def _weighted_items(self, weight):
+        for value, prob in self.__dist.items():
+            yield value, prob * weight

@@ -103,6 +103,30 @@ def test_at_operator():
     with pytest.raises(TypeError):
         2 * d6
 
+def test_excessive_expressions():
+    """
+    I don't know any games that need this, but for completeness we allow dice
+    on the left-hand-side of the @ operator. This is only allowed if the
+    left-hand expression takes only positive integer values.
+    """
+    result = (dice.d3 @ dice.d6).to_dict()
+    assert min(result) == 1
+    assert max(result) == 18
+    assert result[18] == pytest.approx(1 / 3 / 6 ** 3)
+    assert result[17] == pytest.approx(1 / 6 ** 3)
+
+    result = ((dice.d3 * 2) @ dice.d6).to_dict()
+    assert min(result) == 2
+    assert max(result) == 36
+    assert result[36] == pytest.approx(1 / 3 / 6 ** 6)
+    assert result[35] == pytest.approx(6 / 3 / 6 ** 6)
+
+    with pytest.raises(TypeError):
+        (dice.d3 / 2) @ dice.d6
+
+    # @ operator does not commute.
+    assert (dice.d3 @ dice.d6).to_dict() != (dice.d6 @ dice.d3).to_dict()
+
 def check_uniform(die, expected_values):
     """
     Check that "die" has uniform distribution.
