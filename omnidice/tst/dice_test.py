@@ -23,10 +23,7 @@ def test_presets(sides):
 @pytest.mark.parametrize('sides', tuple(range(1, 101)) + (200, 471, 1000))
 def test_one_die(sides):
     """Create dice with any number of sides"""
-    result = dice.d(sides).to_dict()
-    assert result.keys() == set(range(1, sides + 1))
-    for idx in range(1, sides + 1):
-        assert result[idx] == pytest.approx(1 / sides)
+    check_uniform(dice.d(sides), set(range(1, sides + 1)))
 
 def test_roll_die():
     """Use the roll() function to roll one die"""
@@ -35,3 +32,20 @@ def test_roll_die():
     assert roll(d6) in (1, 2, 3, 4, 5, 6)
     # In theory this test has a tiny probability of failing
     assert set(roll(d6) for _ in range(1000)) == {1, 2, 3, 4, 5, 6}
+
+def check_uniform(die, expected_values):
+    """
+    Check that "die" has uniform distribution.
+    """
+    result = die.to_dict()
+    assert result.keys() == expected_values
+    for idx in expected_values:
+        assert result[idx] == pytest.approx(1 / len(expected_values))
+    assert die.sample() in expected_values
+    assert dice.roll(die) in expected_values
+    rolls = set()
+    for idx in range(100):
+        rolls.update(die.sample() for _ in range(len(expected_values)))
+        if rolls == expected_values:
+            break
+    assert rolls == expected_values
