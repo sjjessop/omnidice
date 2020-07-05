@@ -20,7 +20,7 @@ def test_presets(sides):
     result = getattr(dice, f'd{sides}').to_dict()
     assert result == dice.d(sides).to_dict()
 
-@pytest.mark.parametrize('sides', tuple(range(1, 101)) + (200, 471, 1000))
+@pytest.mark.parametrize('sides', tuple(range(1, 51)) + (100, 200, 471, 1000))
 def test_one_die(sides):
     """Create dice with any number of sides"""
     check_uniform(dice.d(sides), set(range(1, sides + 1)))
