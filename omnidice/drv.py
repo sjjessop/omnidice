@@ -1,5 +1,7 @@
 
 from bisect import bisect_left
+import collections
+import operator
 import os
 from random import Random
 
@@ -50,3 +52,24 @@ class DRV(object):
         # exactly equal to the repeated probability!
         idx = bisect_left(self.cdf, sample)
         return self.__cdf_values[idx]
+    def __add__(self, right):
+        return self.apply2(operator.add, right)
+    def __sub__(self, right):
+        return self.apply2(operator.sub, right)
+    def __mul__(self, right):
+        return self.apply2(operator.mul, right)
+    def __truediv__(self, right):
+        return self.apply2(operator.truediv, right)
+    def __floordiv__(self, right):
+        return self.apply2(operator.floordiv, right)
+    def __neg__(self):
+        return self.apply(operator.neg)
+    def apply(self, func):
+        results = collections.defaultdict(int)
+        for value, prob in self.__dist.items():
+            results[func(value)] += prob
+        return DRV(results)
+    def apply2(self, func, right):
+        if isinstance(right, DRV):
+            raise NotImplementedError
+        return self.apply(lambda x: func(x, right))

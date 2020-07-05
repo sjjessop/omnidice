@@ -1,4 +1,6 @@
 
+import math
+
 import pytest
 
 from omnidice import dice
@@ -32,6 +34,34 @@ def test_roll_die():
     assert roll(d6) in (1, 2, 3, 4, 5, 6)
     # In theory this test has a tiny probability of failing
     assert set(roll(d6) for _ in range(1000)) == {1, 2, 3, 4, 5, 6}
+
+def test_simple_expressions():
+    """
+    You can write arithmetic expressions using dice and numeric constants. The
+    result is an object which you can roll just like a single die.
+    """
+    assert 13 <= dice.roll(dice.d6 + 12) <= 18
+    check_uniform(dice.d6 + 1, {2, 3, 4, 5, 6, 7})
+    check_uniform(dice.d6 - 1, {0, 1, 2, 3, 4, 5})
+    check_uniform(dice.d6 * 2 + 4, {6, 8, 10, 12, 14, 16})
+    check_uniform(dice.d6 / 2, {0.5, 1, 1.5, 2, 2.5, 3})
+    check_uniform((dice.d6 + 1) // 2, {1, 2, 3})
+    check_uniform(-dice.d6, {-1, -2, -3, -4, -5, -6})
+
+def test_apply():
+    """
+    For calculations not supported by operator overloading, you can use the
+    apply() function to re-map the generated values. It can be a many-to-one
+    mapping.
+    """
+    check_uniform(
+        dice.d6.apply(math.log),
+        {math.log(idx) for idx in range(1, 7)},
+    )
+    check_uniform(
+        dice.d6.apply(lambda x: 0 if x == 6 else abs(x - 3)),
+        {0, 1, 2},
+    )
 
 def check_uniform(die, expected_values):
     """
