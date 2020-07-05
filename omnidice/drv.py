@@ -63,9 +63,17 @@ class DRV(object):
             return NotImplemented
         if left <= 0:
             raise ValueError(left)
-        result = self
-        for _ in range(left - 1):
-            result += self
+        # Exponentiation by squaring. This isn't massively faster, but does
+        # help a bit for hundreds of dice.
+        result = DRV({0: 1})
+        so_far = self
+        while True:
+            if left % 2 == 1:
+                result += so_far
+            left //= 2
+            if left == 0:
+                break
+            so_far += so_far
         return result
     def __truediv__(self, right):
         return self._apply2(operator.truediv, right)

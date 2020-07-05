@@ -83,6 +83,11 @@ def test_at_operator():
 
     Note the difference between 2@d6, and d6 * 2. For the time being, the
     syntax 2 * d6 is forbidden in order to prevent accidents.
+
+    For large numbers of dice (>100), the current implementation using
+    fractions.Fraction can get a little slow. You could speed it up by using
+    fast_d6 = dice.DRV({x: float(y) for x, y in dice.d6.to_dict()}), but the
+    results will be less precise.
     """
     d6 = dice.d6
     check_uniform(1@d6, {1, 2, 3, 4, 5, 6})
