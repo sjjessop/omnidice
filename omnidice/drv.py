@@ -97,6 +97,14 @@ class DRV(object):
         return self._apply2(operator.floordiv, right)
     def __neg__(self):
         return self.apply(operator.neg)
+    def __le__(self, right):
+        return self._apply2(operator.le, right)
+    def __lt__(self, right):
+        return self._apply2(operator.lt, right)
+    def __ge__(self, right):
+        return self._apply2(operator.ge, right)
+    def __gt__(self, right):
+        return self._apply2(operator.gt, right)
     def apply(self, func):
         """Apply a unary function to the values produced by this DRV."""
         return DRV._reduced(self._items(), func)

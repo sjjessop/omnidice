@@ -127,6 +127,69 @@ def test_excessive_expressions():
     # @ operator does not commute.
     assert (dice.d3 @ dice.d6).to_dict() != (dice.d6 @ dice.d3).to_dict()
 
+def test_comparisons():
+    """
+    Expressions involving a comparison operation return a random variable
+    over two values: True and False.
+
+    You can use comparison operators to implement "target numbers".
+
+    == and != are not currently implemented in this way, because it is
+    ambiguous whether for example d6 == d6 should return True (because they're
+    the same object) or a distibution {True: 1 / 6, False: 5 / 6}.
+    """
+    def true_or_false(prob_true):
+        if prob_true >= 1:
+            return {True: 1}
+        if prob_true <= 0:
+            return {False: 1}
+        return {
+            True: pytest.approx(prob_true),
+            False: pytest.approx(1 - prob_true),
+        }
+    assert (dice.d4 <= 2).to_dict() == true_or_false(0.5)
+    assert (dice.d4 < 3).to_dict() == true_or_false(0.5)
+    assert (dice.d4 >= 4).to_dict() == true_or_false(0.25)
+    assert (dice.d4 > 3).to_dict() == true_or_false(0.25)
+    for idx in range(-10, 10):
+        assert (dice.d4 <= idx).to_dict() == true_or_false(idx * 0.25), idx
+        assert (dice.d4 < idx).to_dict() == true_or_false(idx * 0.25 - 0.25), idx
+        assert (dice.d4 >= idx).to_dict() == true_or_false((5 - idx) * 0.25), idx
+        assert (dice.d4 > idx).to_dict() == true_or_false((4 - idx) * 0.25), idx
+
+    # There are alternatives to equality comparisons
+    # assert dice.d2 == dice.d(2)
+    assert dice.d2.to_dict() == dice.d(2).to_dict()
+    # assert dice.d2 != dice.d3
+    assert dice.d2.to_dict() != dice.d3.to_dict()
+    # assert (dice.d4 == 1).to_dict() == true_or_false(0.25)
+    assert dice.d4.to_dict()[1] == 0.25
+    # assert (dice.d4 != 2).to_dict() == true_or_false(0.75)
+    dist = dice.d4.to_dict().items()
+    assert sum(prob for value, prob in dist if value != 2) == 0.75
+    assert 1 - dice.d4.to_dict()[2] == 0.75
+
+    # Target numbers
+    assert (dice.d100 <= 87).to_dict() == true_or_false(0.87)
+    # Natural twenty
+    assert (dice.d20 >= 20).to_dict()[True] == pytest.approx(1 / 20)
+    # Two different 50/50 chances
+    check_approx(10@(dice.d10 >= 6), 10@(dice.d2 >= 2))
+    # Bucket o' dice and count successes
+    def prob(n, difficulty=8, dice=10):
+        p_succ = (11 - difficulty) / 10
+        return (
+            (p_succ ** n) * (1 - p_succ) ** (dice - n)
+            # TODO math.comb in Python 3.8
+            * math.factorial(dice) / math.factorial(n) / math.factorial(dice - n)
+        )
+    # Exactly 4 successes
+    assert (10 @ (dice.d10 >= 8)).to_dict()[4] == pytest.approx(prob(4))
+    # 4 or more successes
+    prob_4_or_more = sum(prob(n) for n in range(4, 11))
+    result = (10 @ (dice.d10 >= 8) >= 4).to_dict()[True]
+    assert result == pytest.approx(prob_4_or_more)
+
 def check_uniform(die, expected_values):
     """
     Check that "die" has uniform distribution.
@@ -143,3 +206,9 @@ def check_uniform(die, expected_values):
         if rolls == expected_values:
             break
     assert rolls == expected_values
+
+def check_approx(left, right):
+    left, right = left.to_dict(), right.to_dict()
+    assert left.keys() == right.keys()
+    for key in left.keys():
+        assert left[key] == pytest.approx(right[key])
