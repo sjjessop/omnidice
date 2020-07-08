@@ -36,6 +36,15 @@ class DRV(object):
         return f'DRV({self.__dist})'
     def to_dict(self):
         return self.__dist.copy()
+    def to_table(self, as_float=False):
+        if not as_float:
+            items = self._items()
+        else:
+            items = ((v, float(p)) for v, p in self._items())
+        return '\n'.join([
+            'value\tprobability',
+            *(f'{v}\t{p}' for v, p in sorted(items)),
+        ])
     def _items(self):
         return self.__dist.items()
     def replace_tree(self, tree):

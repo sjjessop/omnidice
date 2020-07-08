@@ -229,6 +229,33 @@ def test_repr():
         'DRV({2: Fraction(1, 2), 3: Fraction(1, 2)})',
     )
 
+def test_table():
+    """
+    For eyeballing small data, we can dump the probabilities as a text table.
+    This table is often easier to read with the probabilities as floats.
+    """
+    check_table_match(dice.d4.to_table(), """
+        value\tprobability
+        1\t1/4
+        2\t1/4
+        3\t1/4
+        4\t1/4
+    """)
+    check_table_match((2@dice.d6).to_table(as_float=True), """
+        value\tprobability
+        2\t0.027777777777777776
+        3\t0.05555555555555555
+        4\t0.08333333333333333
+        5\t0.1111111111111111
+        6\t0.1388888888888889
+        7\t0.16666666666666666
+        8\t0.1388888888888889
+        9\t0.1111111111111111
+        10\t0.08333333333333333
+        11\t0.05555555555555555
+        12\t0.027777777777777776
+    """)
+
 def check_uniform(die, expected_values):
     """
     Check that "die" has uniform distribution.
@@ -251,3 +278,12 @@ def check_approx(left, right):
     assert left.keys() == right.keys()
     for key in left.keys():
         assert left[key] == pytest.approx(right[key])
+
+def check_table_match(left, right):
+    def clean(table):
+        lines = table.splitlines()
+        return list(filter(None, map(str.strip, lines)))
+    # Left-hand table, which came from an expression, is in "clean" form...
+    assert clean(left) == left.splitlines()
+    # ... and matches the expected result
+    assert clean(left) == clean(right)
