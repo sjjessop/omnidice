@@ -5,6 +5,7 @@ import operator
 import os
 from random import Random
 
+from .expressions import Atom, BinaryExpression, UnaryExpression
 
 # In case anyone wants to run reproducible sequences of samples *without*
 # passing the "random" argument every time, it's useful to expose our rng, so
@@ -21,17 +22,24 @@ class DRV(object):
     """
     A discrete random variable
     """
-    def __init__(self, distribution):
+    def __init__(self, distribution, tree=None):
         # TODO - make this an immutable dictionary
         self.__dist = dict(distribution)
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
         # building up a complex DRV won't ever be sampled, so save the work.
         self.__cdf = None
+        self.__expr_tree = tree
+    def __repr__(self):
+        if self.__expr_tree is not None:
+            return self.__expr_tree.bracketed()
+        return f'DRV({self.__dist})'
     def to_dict(self):
         return self.__dist.copy()
     def _items(self):
         return self.__dist.items()
+    def replace_tree(self, tree):
+        return DRV(self.__dist, tree)
     @property
     def cdf(self):
         if self.__cdf is None:
@@ -55,11 +63,11 @@ class DRV(object):
         idx = bisect_left(self.cdf, sample)
         return self.__cdf_values[idx]
     def __add__(self, right):
-        return self._apply2(operator.add, right)
+        return self._apply2(operator.add, right, connective='+')
     def __sub__(self, right):
-        return self._apply2(operator.sub, right)
+        return self._apply2(operator.sub, right, connective='-')
     def __mul__(self, right):
-        return self._apply2(operator.mul, right)
+        return self._apply2(operator.mul, right, connective='*')
     def __rmatmul__(self, left):
         # Handles integer on the left, DRV on the right.
         if not isinstance(left, int):
@@ -70,6 +78,7 @@ class DRV(object):
         # help a bit for hundreds of dice.
         result = DRV({0: 1})
         so_far = self
+        original = left
         while True:
             if left % 2 == 1:
                 result += so_far
@@ -77,7 +86,7 @@ class DRV(object):
             if left == 0:
                 break
             so_far += so_far
-        return result
+        return result.replace_tree(self.combine(original, self, '@'))
     def __matmul__(self, right):
         # Handles DRV on the left, DRV on the right.
         if not isinstance(right, DRV):
@@ -90,36 +99,41 @@ class DRV(object):
                 if num_dice in self.__dist:
                     yield so_far, self.__dist[num_dice]
                 so_far += right
-        return DRV._weighted_average(iter_drvs())
+        return DRV._weighted_average(
+            iter_drvs(),
+            tree=self.combine(self, right, '@'),
+        )
     def __truediv__(self, right):
-        return self._apply2(operator.truediv, right)
+        return self._apply2(operator.truediv, right, connective='/')
     def __floordiv__(self, right):
-        return self._apply2(operator.floordiv, right)
+        return self._apply2(operator.floordiv, right, connective='//')
     def __neg__(self):
-        return self.apply(operator.neg)
+        return self.apply(operator.neg, tree=self.combine(self, '-'))
     def __le__(self, right):
-        return self._apply2(operator.le, right)
+        return self._apply2(operator.le, right, connective='<=')
     def __lt__(self, right):
-        return self._apply2(operator.lt, right)
+        return self._apply2(operator.lt, right, connective='<')
     def __ge__(self, right):
-        return self._apply2(operator.ge, right)
+        return self._apply2(operator.ge, right, connective='>=')
     def __gt__(self, right):
-        return self._apply2(operator.gt, right)
-    def apply(self, func):
+        return self._apply2(operator.gt, right, connective='>')
+    def apply(self, func, tree=None):
         """Apply a unary function to the values produced by this DRV."""
-        return DRV._reduced(self._items(), func)
-    def _apply2(self, func, right):
+        return DRV._reduced(self._items(), func, tree=tree)
+    def _apply2(self, func, right, connective=None):
         """Apply a binary function, with the values of this DRV on the left."""
+        expr_tree = self.combine(self, right, connective)
         if isinstance(right, DRV):
-            return self._cross_reduce(func, right)
-        return self.apply(lambda x: func(x, right))
-    def _cross_reduce(self, func, right):
+            return self._cross_reduce(func, right, tree=expr_tree)
+        return self.apply(lambda x: func(x, right), tree=expr_tree)
+    def _cross_reduce(self, func, right, tree=None):
         """
         Take the cross product of self and right, then reduce by applying func.
         """
         return DRV._reduced(
             self._iter_cross(right),
             lambda value: func(*value),
+            tree=tree,
         )
     def _iter_cross(self, right):
         """
@@ -134,17 +148,40 @@ class DRV(object):
             for (rvalue, rprob) in right._items():
                 yield ((lvalue, rvalue), lprob * rprob)
     @staticmethod
-    def _reduced(iterable, func=lambda x: x):
+    def _reduced(iterable, func=lambda x: x, tree=None):
         distribution = collections.defaultdict(int)
         for value, prob in iterable:
             distribution[func(value)] += prob
-        return DRV(distribution)
+        return DRV(distribution, tree=tree)
     @staticmethod
-    def _weighted_average(iterable):
+    def _weighted_average(iterable, tree=None):
         def iter_pairs():
             for drv, weight in iterable:
                 yield from drv._weighted_items(weight)
-        return DRV._reduced(iter_pairs())
+        return DRV._reduced(iter_pairs(), tree=tree)
     def _weighted_items(self, weight):
         for value, prob in self.__dist.items():
             yield value, prob * weight
+    @staticmethod
+    def combine(*args):
+        """
+        Helper for combining two expressions into a combined expression.
+        """
+        for arg in args:
+            if arg is None:
+                return None
+            if isinstance(arg, DRV) and arg.__expr_tree is None:
+                return None
+        def unpack(subexpr):
+            if isinstance(subexpr, DRV):
+                return subexpr.__expr_tree
+            return Atom(repr(subexpr))
+        if len(args) == 2:
+            # Unary expression
+            subexpr, connective = args
+            return UnaryExpression(unpack(subexpr), connective)
+        elif len(args) == 3:
+            # Binary expression
+            left, right, connective = args
+            return BinaryExpression(unpack(left), unpack(right), connective)
+        raise TypeError

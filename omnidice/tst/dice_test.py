@@ -190,6 +190,45 @@ def test_comparisons():
     result = (10 @ (dice.d10 >= 8) >= 4).to_dict()[True]
     assert result == pytest.approx(prob_4_or_more)
 
+def test_repr():
+    """
+    The representation of these objects reflects the original expression. It's
+    not just a dump of the probabilities unless the expression was created in
+    a way we can't track.
+    """
+    def check(expr, string_form):
+        assert repr(expr) == string_form
+        result = eval(string_form, dice.__dict__)
+        check_approx(expr, result)
+
+    check(dice.d6, 'd6')
+    check(dice.d6 + 1, '(d6 + 1)')
+    check(dice.d6 + dice.d6, '(d6 + d6)')
+    check(2@dice.d6, '(2 @ d6)')
+    check(dice.d(783), 'd(783)')
+    check(dice.d(6), 'd6')
+    check(-dice.d6, '-d6')
+    check(-(dice.d6 + dice.d4), '-(d6 + d4)')
+    check(
+        (2 @ dice.d4) * (dice.d6 + dice.d(10)) - (8 @ dice.d4 - 5),
+        '((2 @ d4) * (d6 + d10) - (8 @ d4 - 5))',
+    )
+    check(dice.d6 + dice.d6 + dice.d6, '(d6 + d6 + d6)')
+    check(dice.d6 - dice.d6 - dice.d6, '(d6 - d6 - d6)')
+    check(dice.d6 - (dice.d6 - dice.d6), '(d6 - (d6 - d6))')
+    check((dice.d6 + dice.d6) - dice.d6, '(d6 + d6 - d6)')
+    check((dice.d6 + dice.d6) < dice.d6, '(d6 + d6 < d6)')
+    check((dice.d6 + dice.d6) * dice.d6, '((d6 + d6) * d6)')
+    check(
+        (dice.d6 <= dice.d6) <= (dice.d6 <= dice.d6),
+        '((d6 <= d6) <= (d6 <= d6))',
+    )
+    check(dice.d2 @ dice.d2, '(d2 @ d2)')
+    check(
+        dice.d2.apply(lambda x: x + 1),
+        'DRV({2: Fraction(1, 2), 3: Fraction(1, 2)})',
+    )
+
 def check_uniform(die, expected_values):
     """
     Check that "die" has uniform distribution.
