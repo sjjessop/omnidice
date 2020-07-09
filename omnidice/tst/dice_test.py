@@ -274,6 +274,23 @@ def test_table():
         12\t0.027777777777777776
     """)
 
+@pytest.mark.parametrize('expr', [dice.d6, 10 @ dice.d6, dice.d10 + 1])
+def test_pandas(expr):
+    """
+    For eyeballing or charting data, or whatever other onward processing you
+    like, we can export the distribution as a pandas Series object. This is
+    an optional feature, only available is pandas is installed.
+    """
+    try:
+        import pandas  # noqa F401 'pandas' imported but unused
+    except ModuleNotFoundError:
+        with pytest.raises(ModuleNotFoundError):
+            expr.to_pd()
+    else:
+        assert dict(expr.to_pd()) == expr.to_dict()
+        # You can also construct a random variable from a Series
+        check_approx(dice.DRV(expr.to_pd()), expr)
+
 def check_uniform(die, expected_values):
     """
     Check that "die" has uniform distribution.

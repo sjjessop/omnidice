@@ -10,5 +10,8 @@ setuptools.setup(
         'coverage',
         'flake8',
         'pytest',
-    ]
+    ],
+    extras_require={
+        'pd': ['pandas'],
+    }
 )

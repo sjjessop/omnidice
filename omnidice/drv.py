@@ -36,6 +36,13 @@ class DRV(object):
         return f'DRV({self.__dist})'
     def to_dict(self):
         return self.__dist.copy()
+    def to_pd(self):
+        try:
+            import pandas as pd
+        except ModuleNotFoundError:
+            msg = 'You must install pandas for this optional feature'
+            raise ModuleNotFoundError(msg)
+        return pd.Series(self.__dist, name='probability')
     def to_table(self, as_float=False):
         if not as_float:
             items = self._items()
