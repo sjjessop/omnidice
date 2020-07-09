@@ -4,6 +4,7 @@ import collections
 import operator
 import os
 from random import Random
+from types import MappingProxyType
 
 from .expressions import Atom, BinaryExpression, UnaryExpression
 
@@ -23,8 +24,7 @@ class DRV(object):
     A discrete random variable
     """
     def __init__(self, distribution, tree=None):
-        # TODO - make this an immutable dictionary
-        self.__dist = dict(distribution)
+        self.__dist = MappingProxyType(dict(distribution))
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
         # building up a complex DRV won't ever be sampled, so save the work.
