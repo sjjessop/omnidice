@@ -190,6 +190,22 @@ def test_comparisons():
     result = (10 @ (dice.d10 >= 8) >= 4).to_dict()[True]
     assert result == pytest.approx(prob_4_or_more)
 
+def test_explode():
+    """
+    Plenty of systems use dice that explode on their maximum value.
+    """
+    assert (dice.d6.explode() > 6).to_dict()[True] == pytest.approx(1 / 6)
+    assert (dice.d6.explode() > 12).to_dict()[True] == pytest.approx(1 / 36)
+    # Limit the number of times the die is re-rolled
+    mini_explode = dice.d6.explode(rerolls=1)
+    assert (mini_explode > 6).to_dict()[True] == pytest.approx(1 / 6)
+    assert mini_explode.to_dict()[12] == pytest.approx(1 / 36)
+    assert (mini_explode > 12).to_dict().get(True, 0) == 0
+    # It doesn't have to be a single die
+    multi_explode = (2@dice.d6).explode()
+    assert multi_explode.to_dict().get(12, 0) == 0
+    assert (multi_explode > 12).to_dict()[True] == pytest.approx(1 / 36)
+
 def test_repr():
     """
     The representation of these objects reflects the original expression. It's
@@ -228,6 +244,8 @@ def test_repr():
         dice.d2.apply(lambda x: x + 1),
         'DRV({2: Fraction(1, 2), 3: Fraction(1, 2)})',
     )
+    check(dice.d6.explode(), 'd6.explode()')
+    check(dice.d6.explode(rerolls=2), 'd6.explode(2)')
 
 def test_table():
     """

@@ -126,6 +126,25 @@ class DRV(object):
         return self._apply2(operator.ge, right, connective='>=')
     def __gt__(self, right):
         return self._apply2(operator.gt, right, connective='>')
+    def explode(self, rerolls=50):
+        reroll_value = max(self.__dist.keys())
+        reroll_prob = self.__dist[reroll_value]
+        each_die = self.__dist.copy()
+        each_die.pop(reroll_value)
+        def iter_pairs():
+            for idx in range(rerolls + 1):
+                for value, prob in each_die.items():
+                    value += reroll_value * idx
+                    prob *= reroll_prob ** idx
+                    yield (value, prob)
+            yield (reroll_value * (idx + 1), reroll_prob ** (idx + 1))
+        if self.__expr_tree is None:
+            tree = None
+        elif rerolls == 50:
+            tree = Atom(f'{self!r}.explode()')
+        else:
+            tree = Atom(f'{self!r}.explode({rerolls!r})')
+        return self._reduced(iter_pairs(), tree=tree)
     def apply(self, func, tree=None):
         """Apply a unary function to the values produced by this DRV."""
         return DRV._reduced(self._items(), func, tree=tree)
