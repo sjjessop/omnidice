@@ -86,8 +86,7 @@ def test_at_operator():
 
     For large numbers of dice (>100), the current implementation using
     fractions.Fraction can get a little slow. You could speed it up by using
-    fast_d6 = dice.DRV({x: float(y) for x, y in dice.d6.to_dict()}), but the
-    results will be less precise.
+    fast_d6 = dice.d6.faster(), but the results will be less precise.
     """
     d6 = dice.d6
     check_uniform(1@d6, {1, 2, 3, 4, 5, 6})
@@ -290,6 +289,18 @@ def test_pandas(expr):
         assert dict(expr.to_pd()) == expr.to_dict()
         # You can also construct a random variable from a Series
         check_approx(dice.DRV(expr.to_pd()), expr)
+
+@pytest.mark.parametrize('expr', [dice.d6, 10 @ dice.d6, dice.d10 + 1])
+def test_faster(expr):
+    """
+    If the default implementation using fractions is slow, converting to
+    float is likely to be faster. However it is less precise.
+    """
+    check_approx(expr.faster(), expr)
+    # Not really testing much here, but it does cover a little bit of code
+    # in the cdf function, which handles the case where rounding errors make
+    # the total probability less than 1.
+    expr.faster().sample()
 
 def check_uniform(die, expected_values):
     """

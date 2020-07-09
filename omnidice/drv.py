@@ -52,6 +52,8 @@ class DRV(object):
             'value\tprobability',
             *(f'{v}\t{p}' for v, p in sorted(items)),
         ])
+    def faster(self):
+        return DRV({x: float(y) for x, y in self._items()})
     def _items(self):
         return self.__dist.items()
     def replace_tree(self, tree):
