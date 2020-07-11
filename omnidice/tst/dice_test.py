@@ -222,8 +222,8 @@ def test_repr():
     check(2@dice.d6, '(2 @ d6)')
     check(dice.d(783), 'd(783)')
     check(dice.d(6), 'd6')
-    check(-dice.d6, '-d6')
-    check(-(dice.d6 + dice.d4), '-(d6 + d4)')
+    check(-dice.d6, '(-d6)')
+    check(-(dice.d6 + dice.d4), '(-(d6 + d4))')
     check(
         (2 @ dice.d4) * (dice.d6 + dice.d(10)) - (8 @ dice.d4 - 5),
         '((2 @ d4) * (d6 + d10) - (8 @ d4 - 5))',
@@ -245,6 +245,10 @@ def test_repr():
     )
     check(dice.d6.explode(), 'd6.explode()')
     check(dice.d6.explode(rerolls=2), 'd6.explode(2)')
+    check(-dice.d6.explode(), '(-d6.explode())')
+    check((-dice.d6).explode(), '(-d6).explode()')
+    check(-dice.d6.faster(), '(-d6.faster())')
+    check((-dice.d6).faster(), '(-d6).faster()')
 
 def test_table():
     """
@@ -301,6 +305,13 @@ def test_faster(expr):
     # in the cdf function, which handles the case where rounding errors make
     # the total probability less than 1.
     expr.faster().sample()
+
+def test_regression_1():
+    """
+    Regression test for https://github.com/sjjessop/omnidice/issues/1
+    """
+    expr = (-dice.d6).explode()
+    check_approx(expr, eval(repr(expr), dice.__dict__))
 
 def check_uniform(die, expected_values):
     """

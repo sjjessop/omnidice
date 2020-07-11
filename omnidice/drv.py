@@ -6,7 +6,8 @@ import os
 from random import Random
 from types import MappingProxyType
 
-from .expressions import Atom, BinaryExpression, UnaryExpression
+from .expressions import Atom
+from .expressions import AttrExpression, BinaryExpression, UnaryExpression
 
 # In case anyone wants to run reproducible sequences of samples *without*
 # passing the "random" argument every time, it's useful to expose our rng, so
@@ -53,7 +54,10 @@ class DRV(object):
             *(f'{v}\t{p}' for v, p in sorted(items)),
         ])
     def faster(self):
-        return DRV({x: float(y) for x, y in self._items()})
+        return DRV(
+            {x: float(y) for x, y in self._items()},
+            tree=self._combine_post('.faster()'),
+        )
     def _items(self):
         return self.__dist.items()
     def replace_tree(self, tree):
@@ -147,13 +151,8 @@ class DRV(object):
                     prob *= reroll_prob ** idx
                     yield (value, prob)
             yield (reroll_value * (idx + 1), reroll_prob ** (idx + 1))
-        if self.__expr_tree is None:
-            tree = None
-        elif rerolls == 50:
-            tree = Atom(f'{self!r}.explode()')
-        else:
-            tree = Atom(f'{self!r}.explode({rerolls!r})')
-        return self._reduced(iter_pairs(), tree=tree)
+        postfix = '.explode()' if rerolls == 50 else f'.explode({rerolls!r})'
+        return self._reduced(iter_pairs(), tree=self._combine_post(postfix))
     def apply(self, func, tree=None):
         """Apply a unary function to the values produced by this DRV."""
         return DRV._reduced(self._items(), func, tree=tree)
@@ -222,3 +221,7 @@ class DRV(object):
             left, right, connective = args
             return BinaryExpression(unpack(left), unpack(right), connective)
         raise TypeError
+    def _combine_post(self, postfix):
+        if self.__expr_tree is None:
+            return None
+        return AttrExpression(self.__expr_tree, postfix)

@@ -64,11 +64,17 @@ class UnaryExpression(ExpressionTree):
     subexpr: ExpressionTree
     operator: str
     def source(self):
-        return ''.join((self.operator, self.subexpr.bracketed()))
+        return self.operator + self.subexpr.bracketed()
+
+@dataclass(frozen=True)
+class AttrExpression(ExpressionTree):
+    subexpr: ExpressionTree
+    postfix: str
+    def source(self):
+        return self.subexpr.bracketed() + self.postfix
     def bracketed(self):
-        # It happens we only support one unary operator (minus), which has
-        # higher precedence than any other operator we support. Therefore no
-        # brackets are needed.
+        # Attribute access (. operator) has highest precedence, so no brackets
+        # needed.
         return self.source()
 
 @dataclass(frozen=True)
