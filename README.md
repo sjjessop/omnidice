@@ -3,6 +3,14 @@
 A Python library for arithmetic involving dice and other discrete random
 variables.
 
+## Purpose
+
+This library is mainly intended for computing probabilities for the various
+dice rolls needed for different tabletop RPGs. A function is provided to roll
+the dice and get a single result, but the main intention is to answer questions
+like, "what are my chances of making a particular roll", "how much of an
+advantage is it to have one extra point", and the like.
+
 ## Getting Started
 
 ### Installation
@@ -113,8 +121,14 @@ to do your own computations with them:
 
 ## Performance and precision
 
-Performance is modest for large numbers of dice or large numbers of sides. By
-default, probabilities are expressed using `fractions.Fraction`, which is
+The library currently computes probability distributions eagerly. When you
+create the object `10 @ d6`, all 51 possible outcomes and their probabilities
+are computed and stored. The algorithms for doing so are not particularly
+optimised. This means that very large dice rolls (larger than you actually
+encounter in practical games) can be very slow. I may change this in future,
+hopefully with minor backward-incompatibilities or none.
+
+By default, probabilities are expressed using `fractions.Fraction`, which is
 precise but slow. You can convert the probabilities in any `DRV` to `float`
 by calling the `faster()` method, which returns a new object. Typically this
 is a lot faster, but you will of course be subject to the inaccuracies of
