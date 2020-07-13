@@ -7,11 +7,15 @@ setuptools.setup(
     python_requires='>=3.7.3',
     packages=setuptools.find_packages(),
     install_requires=[
-        'coverage',
-        'flake8',
         'pytest',
     ],
     extras_require={
+        'dev': [
+            'coverage',
+            'flake8',
+            'm2r',
+            'sphinx',
+        ],
         'pd': ['pandas'],
     }
 )
