@@ -55,6 +55,8 @@ def add_source_parser(_old_add_source_parser, self, *args, **kwargs):
 extensions = [
     'm2r',
     'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
 ]
 
 source_suffix = ['.rst', '.md']
@@ -67,6 +69,7 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
 
 # -- Options for HTML output -------------------------------------------------
 

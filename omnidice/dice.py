@@ -5,7 +5,11 @@ from .drv import DRV
 from .expressions import Atom
 
 class d(DRV):
-    def __init__(self, sides):
+    """
+    One polyhedral die, or in general a uniform discrete random variable over
+    the integers from 1 to `sides` inclusive.
+    """
+    def __init__(self, sides: int):
         prob = Fraction(1, sides)
         super().__init__(
             ((idx, prob) for idx in range(1, sides + 1)),
@@ -32,5 +36,16 @@ class d(DRV):
 for idx in range(1, 101):
     globals()[f'd{idx}'] = d(idx)
 
-def roll(drv):
+def roll(drv: DRV):
+    """
+    Roll the dice indicated by `drv`.
+
+    To specify the random number generator to use, call
+    :meth:`drv.sample() <omnidice.drv.DRV.sample()>`.
+
+    :param drv: Dice to roll (that is, the random variable to sample).
+    :returns: One possible value of `drv`. If `drv` represents real dice, then
+      this will be an integer, but you can have `drv` objects with other types.
+      For example, :code:`roll(d6 / 2)` returns `float`.
+    """
     return drv.sample()

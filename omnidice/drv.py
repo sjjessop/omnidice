@@ -1,20 +1,30 @@
 
 from bisect import bisect_left
 import collections
+from numbers import Real
 import operator
 import os
 from random import Random
 from types import MappingProxyType
+from typing import (
+    Any, Callable, Dict, Iterable, Mapping, Tuple, TypeVar, Union
+)
 
-from .expressions import Atom
+from .expressions import Atom, ExpressionTree
 from .expressions import AttrExpression, BinaryExpression, UnaryExpression
 
-# In case anyone wants to run reproducible sequences of samples *without*
-# passing the "random" argument every time, it's useful to expose our rng, so
-# they can call seed() on it. If we used the global shared rng, then other
-# calls to random.seed() or random.random() would interfere with this state.
+#: The random number generator used as a default by :meth:`DRV.sample()`. If
+#: you need reproducible results, then you can call
+#: :py:func:`omnidice.drv.rng.seed() <random.seed()>` to set its state.
+#:
+#: Another way to get reproducible results is to create your own instance of
+#: :class:`random.Random` (or a subclass) and pass that to each call to
+#: :meth:`DRV.sample()`.
 rng = Random(os.urandom(10))
 
+K = TypeVar('K')
+V = TypeVar('V')
+DictConstructor = Union[Mapping[K, V], Iterable[Tuple[K, V]]]
 
 # TODO - consider using https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html
 # It doesn't seem to provide any of the arithmetic, though, so using scipy just
@@ -22,9 +32,36 @@ rng = Random(os.urandom(10))
 # https://github.com/jszymon/pacal might do the arithmetic for us, though.
 class DRV(object):
     """
-    A discrete random variable
+    A discrete random variable.
+
+    A DRV has one or more :dfn:`possible values` (or just :dfn:`values`), which
+    can be any type. Each possible value has an associated :dfn:`probability`,
+    which is a real number between 0 and 1.
+
+    It is strongly recommended that the probabilities add up to exactly 1. This
+    might be difficult to achieve with :obj:`float` probabilities, and so this
+    class does not enforce that restriction, and makes it possible to sample a
+    variable even if the total is not 1. The exact distribution of the samples
+    in that case is not specified, only that it will attempt to follow the
+    probabilities given. Loosely: if the total is too low then one value's
+    probability is rounded up. If the total is too high, then one probability
+    is rounded down, and/or one or more values is ignored. These adjustments
+    apply only to sampling: the original probabilities are still reported by
+    :func:`to_dict()` etc.
+
+    :param distribution: Any value from which a dictionary can be constructed,
+      that is a :obj:`Mapping` or :obj:`Iterable` of (value, probability)
+      pairs.
+    :param tree: The expression from which this object was defined. Currently
+      this is used only for the string representation, but might in future
+      help support lazily-evaluated DRVs.
     """
-    def __init__(self, distribution, tree=None):
+    def __init__(self,
+                 # This type is even worse than it needs to be, because mypy
+                 # doesn't know that `float` is a `Real`.
+                 # https://github.com/python/mypy/issues/3186
+                 distribution: DictConstructor[Any, Union[Real, float]],
+                 tree: ExpressionTree = None):
         self.__dist = MappingProxyType(dict(distribution))
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
@@ -35,16 +72,37 @@ class DRV(object):
         if self.__expr_tree is not None:
             return self.__expr_tree.bracketed()
         return f'DRV({self.__dist})'
-    def to_dict(self):
-        return self.__dist.copy()
+    def to_dict(self) -> Dict[Any, Union[Real, float]]:
+        """
+        Return a dictionary mapping all possible values to probabilities.
+        """
+        # dict(self.__dist) is type-correct, but about 3 times slower.
+        # Unfortunately there's no way to parameterise MappingProxyType to
+        # say what the type is of the underlying mapping that gets copied.
+        return self.__dist.copy()  # type: ignore
     def to_pd(self):
+        """
+        Return a :class:`pandas.Series` mapping values to probabilities. The
+        series is indexed by the possible values.
+
+        :raises: :class:`ModuleNotFoundError` if pandas is not installed. Note
+          that pandas is not a hard dependency of this package. You must
+          install it to use this method.
+        """
         try:
             import pandas as pd
         except ModuleNotFoundError:
             msg = 'You must install pandas for this optional feature'
             raise ModuleNotFoundError(msg)
         return pd.Series(self.__dist, name='probability')
-    def to_table(self, as_float=False):
+    def to_table(self, as_float: bool = False) -> str:
+        """
+        Return a string containing the values and probabilities formatted as a
+        table. This is intended only for manually checking small distributions.
+
+        :param as_float: Display probabilites as floating-point. You might find
+          floats easier to read by eye.
+        """
         if not as_float:
             items = self._items()
         else:
@@ -53,14 +111,24 @@ class DRV(object):
             'value\tprobability',
             *(f'{v}\t{p}' for v, p in sorted(items)),
         ])
-    def faster(self):
+    def faster(self) -> 'DRV':
+        """
+        Return a new DRV, with all probabilities converted to float.
+        """
         return DRV(
             {x: float(y) for x, y in self._items()},
             tree=self._combine_post('.faster()'),
         )
     def _items(self):
         return self.__dist.items()
-    def replace_tree(self, tree):
+    def replace_tree(self, tree: ExpressionTree) -> 'DRV':
+        """
+        Return a new DRV with the same distribution as this DRV, but defined
+        from the specified expression.
+
+        This is used for example when some optimisation has computed a DRV one
+        way, but we want to represent it the original way.
+        """
         return DRV(self.__dist, tree)
     @property
     def cdf(self):
@@ -75,7 +143,14 @@ class DRV(object):
                     yield value, 1
             self.__cdf_values, self.__cdf = map(tuple, zip(*iter_totals()))
         return self.__cdf
-    def sample(self, random=rng):
+    def sample(self, random: Random = rng):
+        """
+        Sample this variable.
+
+        :param random: Random number generator to use. The default is a single
+          object shared by all instances of :class:`DRV`.
+        :returns: One possible value of this variable.
+        """
         sample = random.random()
         # The index of the first cumulative probability greater than or equal
         # to our random sample. If there's a repeated probability in the array,
@@ -84,14 +159,54 @@ class DRV(object):
         # exactly equal to the repeated probability!
         idx = bisect_left(self.cdf, sample)
         return self.__cdf_values[idx]
-    def __add__(self, right):
+    def __add__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self + right`.
+
+        Return a random variable which is the result of adding this variable to
+        `right`. `right` can be either a constant or another DRV (in which case
+        the result assumes that the two random variables are independent).
+
+        As with :meth:`apply()`, probabilities are added up wherever addition
+        is many-to-one (for constant numbers it is one-to-one provided overflow
+        does not occur).
+        """
         return self._apply2(operator.add, right, connective='+')
-    def __sub__(self, right):
+    def __sub__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self - right`.
+
+        Return a random variable which is the result of subtracting `right`
+        from this variable. `right` can be either a constant or another DRV (in
+        which case the result assumes that the two random variables are
+        independent).
+
+        As with :meth:`apply()`, probabilities are added up wherever
+        subtraction is many-to-one (for contant numbers it is one-to-one
+        provided overflow does not occur).
+        """
         return self._apply2(operator.sub, right, connective='-')
     def __mul__(self, right):
+        """
+        Handler for :code:`self * right`.
+
+        Return a random variable which is the result of multiplying this
+        variable with `right`. `right` can be either a constant or another DRV
+        (in which case the result assumes that the two random variables are
+        independent).
+
+        As with :meth:`apply()`, probabilities are added up in the case where
+        multiplication is not one-to-one (for constant numbers other than zero
+        it is one-to-one provided overflow and underflow do not occur).
+        """
         return self._apply2(operator.mul, right, connective='*')
-    def __rmatmul__(self, left):
-        # Handles integer on the left, DRV on the right.
+    def __rmatmul__(self, left: int) -> 'DRV':
+        """
+        Handler for :code:`left @ self`.
+
+        Return a random variable which is the result of sampling this variable
+        `left` times, and adding the results together.
+        """
         if not isinstance(left, int):
             return NotImplemented
         if left <= 0:
@@ -108,9 +223,16 @@ class DRV(object):
             if left == 0:
                 break
             so_far += so_far
-        return result.replace_tree(self.combine(original, self, '@'))
-    def __matmul__(self, right):
-        # Handles DRV on the left, DRV on the right.
+        return result.replace_tree(self._combine(original, self, '@'))
+    def __matmul__(self, right: 'DRV') -> 'DRV':
+        """
+        Handler for :code:`self @ right`.
+
+        Return a random variable which is the result of sampling this variable
+        once, then adding together that many samples of `right`.
+
+        All possible values of this variable must be of type :obj:`int`.
+        """
         if not isinstance(right, DRV):
             return NotImplemented
         if not all(isinstance(value, int) for value in self.__dist):
@@ -123,26 +245,124 @@ class DRV(object):
                 so_far += right
         return DRV._weighted_average(
             iter_drvs(),
-            tree=self.combine(self, right, '@'),
+            tree=self._combine(self, right, '@'),
         )
-    def __truediv__(self, right):
+    def __truediv__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self / right`.
+
+        Return a random variable which is the result of floor-dividing this
+        variable by `right`. `right` can be either a constant or another DRV
+        (in which case the result assumes that the two random variables are
+        independent).
+
+        As with :meth:`apply()`, probabilities are added up wherever division
+        is many-to-one (for constant numbers other than zero it is one-to-one
+        provided overflow and underflow do not occur).
+
+        0 must not be a possible value of `right` (even with probability 0).
+        """
         return self._apply2(operator.truediv, right, connective='/')
-    def __floordiv__(self, right):
+    def __floordiv__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self // right`.
+
+        Return a random variable which is the result of dividing this
+        variable by `right`. `right` can be either a constant or another DRV
+        (in which case the result assumes that the two random variables are
+        independent).
+
+        As with :meth:`apply()`, probabilities are added up wherever floor
+        division is many-to-one (for numbers it is mostly many-to-one, for
+        example :code:`2 // 2 == 1 == 3 // 2`).
+
+        0 must not be a possible value of `right` (even with probability 0).
+        """
         return self._apply2(operator.floordiv, right, connective='//')
-    def __neg__(self):
-        return self.apply(operator.neg, tree=self.combine(self, '-'))
-    def __le__(self, right):
+    def __neg__(self) -> 'DRV':
+        """
+        Handler for :code:`-self`.
+
+        Return a random variable which is the result of negating the values of
+        this variable.
+
+        As with :meth:`apply()`, probabilities are added up wherever negation
+        is many-to-one (for numbers it is one-to-one).
+        """
+        return self.apply(operator.neg, tree=self._combine(self, '-'))
+    def __le__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self <= right`.
+
+        Return a random variable which takes value :obj:`True` where `self` is
+        less than or equal to `right`, and :obj:`False` otherwise. `right` can
+        be either a constant or another DRV (in which case the result assumes
+        that the two random variables are independent).
+
+        If either :obj:`True` or :obj:`False` cannot happen then the result
+        has only one possible value, with probability 1. There is no possible
+        value with probability 0.
+        """
         return self._apply2(operator.le, right, connective='<=')
-    def __lt__(self, right):
+    def __lt__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self < right`.
+
+        Return a random variable which takes value :obj:`True` where `self` is
+        less than `right`, and :obj:`False` otherwise. `right` can be either a
+        constant or another DRV (in which case the result assumes that the two
+        random variables are independent).
+
+        If either :obj:`True` or :obj:`False` cannot happen then the result
+        has only one possible value, with probability 1. There is no possible
+        value with probability 0.
+        """
         return self._apply2(operator.lt, right, connective='<')
-    def __ge__(self, right):
+    def __ge__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self >= right`.
+
+        Return a random variable which takes value :obj:`True` where `self` is
+        greater than or equal to `right`, and :obj:`False` otherwise. `right`
+        can be either a constant or another DRV (in which case the result
+        assumes that the two random variables are independent).
+
+        If either :obj:`True` or :obj:`False` cannot happen then the result
+        has only one possible value, with probability 1. There is no possible
+        value with probability 0.
+        """
         return self._apply2(operator.ge, right, connective='>=')
-    def __gt__(self, right):
+    def __gt__(self, right) -> 'DRV':
+        """
+        Handler for :code:`self > right`.
+
+        Return a random variable which takes value :obj:`True` where `self` is
+        greater than `right`, and :obj:`False` otherwise. `right` can be either
+        a constant or another DRV (in which case the result assumes that the
+        two random variables are independent).
+
+        If either :obj:`True` or :obj:`False` cannot happen then the result
+        has only one possible value, with probability 1. There is no possible
+        value with probability 0.
+        """
         return self._apply2(operator.gt, right, connective='>')
-    def explode(self, rerolls=50):
+    def explode(self, rerolls: int = 50) -> 'DRV':
+        """
+        Return a new DRV distributed according to the rules of an "exploding
+        die". This means, first roll the die (sample this DRV). If the result
+        is not the maximum possible, then keep it. If it is the maximum, then
+        roll again and add the new result to the original.
+
+        Because DRV represents only finitely-many possible values, whereas the
+        process of rerolling can (with minuscule probability) carry on forever,
+        this method imposes an arbitary limit to the number of rerolls.
+
+        :param rerolls: The maximum number of rerolls. Set this to 1 for a die
+          that can only "explode" once, not indefinitely.
+        """
         reroll_value = max(self.__dist.keys())
         reroll_prob = self.__dist[reroll_value]
-        each_die = self.__dist.copy()
+        each_die = self.to_dict()
         each_die.pop(reroll_value)
         def iter_pairs():
             for idx in range(rerolls + 1):
@@ -153,12 +373,21 @@ class DRV(object):
             yield (reroll_value * (idx + 1), reroll_prob ** (idx + 1))
         postfix = '.explode()' if rerolls == 50 else f'.explode({rerolls!r})'
         return self._reduced(iter_pairs(), tree=self._combine_post(postfix))
-    def apply(self, func, tree=None):
-        """Apply a unary function to the values produced by this DRV."""
+    def apply(self, func: Callable[[Any], Any], tree: ExpressionTree = None):
+        """
+        Apply a unary function to the values produced by this DRV. If `func` is
+        an injective (one-to-one) function, then the probabilities are
+        unchanged. If `func` is many-to-one, then the probabilties are added
+        together.
+
+        :param func: Function to map the values. Each value `x` is replaced by
+          `func(x)`.
+        :param tree: The expression from which this object was defined.
+        """
         return DRV._reduced(self._items(), func, tree=tree)
     def _apply2(self, func, right, connective=None):
         """Apply a binary function, with the values of this DRV on the left."""
-        expr_tree = self.combine(self, right, connective)
+        expr_tree = self._combine(self, right, connective)
         if isinstance(right, DRV):
             return self._cross_reduce(func, right, tree=expr_tree)
         return self.apply(lambda x: func(x, right), tree=expr_tree)
@@ -199,7 +428,7 @@ class DRV(object):
         for value, prob in self.__dist.items():
             yield value, prob * weight
     @staticmethod
-    def combine(*args):
+    def _combine(*args):
         """
         Helper for combining two expressions into a combined expression.
         """
