@@ -1,7 +1,9 @@
 # Omnidice
 
 A Python library for arithmetic involving dice and other discrete random
-variables.
+variables. [Full documentation](https://omnidice.readthedocs.io/en/latest/).
+
+[![Documentation Status](https://readthedocs.org/projects/omnidice/badge/?version=latest)](https://omnidice.readthedocs.io/en/latest/?badge=latest)
 
 ## Purpose
 

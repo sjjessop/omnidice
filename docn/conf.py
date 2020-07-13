@@ -30,6 +30,8 @@ release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 
+master_doc = 'index'
+
 # https://github.com/miyakogi/m2r/issues/51#issuecomment-618285433
 # Could use https://github.com/qhua948/m2rr instead of m2r.
 def monkeypatch(cls):
