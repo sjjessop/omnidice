@@ -17,7 +17,7 @@ advantage is it to have one extra point", and the like.
 
 ### Installation
 
-```
+```bash
 git clone git@github.com:sjjessop/omnidice.git
 cd omnidice
 python setup.py install
@@ -35,7 +35,7 @@ convenience features for dice. The following operators are implemented: `+`,
 `-`, `*`, `/`, `//`, `<`, `<=`, `>`, `>=` and `@` (which represents multiple
 rolls added together).
 
-```
+```pycon
 >>> from omnidice.dice import d4, d6, d8, d, roll
 >>> roll(d6)
 2
@@ -104,7 +104,7 @@ For additional examples of use, see the test code in
 If you install `pandas`, then you can write the probability distribution to
 a `Series` object:
 
-```
+```pycon
 >>> d4.to_pd()
 1    1/4
 2    1/4
@@ -116,7 +116,7 @@ Name: probability, dtype: object
 Even without Pandas, you can get the probabilities as a dictionary if you want
 to do your own computations with them:
 
-```
+```pycon
 >>> d6.to_dict()
 {1: Fraction(1, 6), 2: Fraction(1, 6), 3: Fraction(1, 6), 4: Fraction(1, 6), 5: Fraction(1, 6), 6: Fraction(1, 6)}
 ```
@@ -136,7 +136,7 @@ by calling the `faster()` method, which returns a new object. Typically this
 is a lot faster, but you will of course be subject to the inaccuracies of
 floating-point arithmetic.
 
-```
+```pycon
 >>> print(d4.to_table())
 value   probability
 1       1/4
@@ -154,7 +154,7 @@ value   probability
 That said, if you stick to numbers below 100 you're unlikely to mind the
 speed too much even with `fractions`:
 
-```
+```console
 $ python -mtimeit -s"from omnidice.dice import d6" -c "10 @ d6"
 50 loops, best of 5: 4.58 msec per loop
 
