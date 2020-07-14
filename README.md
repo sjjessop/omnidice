@@ -97,7 +97,7 @@ True    0.15200617283950618
 ```
 
 For additional examples of use, see the test code in
-`omnidice/tst/dice_test.py`
+:file:`omnidice/tst/dice_test.py`
 
 ### Optional dependency
 
