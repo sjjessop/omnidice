@@ -1,0 +1,31 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Install code and dev dependencies
+        run: |
+          pip install -e .[dev]
+          pip freeze
+
+      - name: Lint
+        run: flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
+
+      - name: Test without Pandas
+        run: pytest
+
+      - name: Test with Pandas
+        run: |
+          pip install pandas
+          pip freeze
+          pytest
