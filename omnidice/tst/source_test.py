@@ -1,5 +1,6 @@
 
 import os
+import re
 
 def check_file(filename):
     return os.path.splitext(filename)[1] == '.py'
@@ -20,3 +21,13 @@ def test_linebreaks():
             with open(fullname, 'rb') as infile:
                 assert b'\r\n' not in infile.read(), f'{fullname} contains Windows linebreaks'
         dirs[:] = filter(check_dir, dirs)
+
+def test_version_numbers():
+    """Version numbers in different places must be consistent."""
+    with open('setup.py') as infile:
+        setup_pattern = r"^\s*version='([^']*)',?$"
+        setup = re.search(setup_pattern, infile.read(), re.MULTILINE).group(1)
+    with open('docn/conf.py') as infile:
+        docn_pattern = "^release = '([^']*)'$"
+        docn = re.search(docn_pattern, infile.read(), re.MULTILINE).group(1)
+    assert docn == setup
