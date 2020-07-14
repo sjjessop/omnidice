@@ -26,6 +26,16 @@ K = TypeVar('K')
 V = TypeVar('V')
 DictConstructor = Union[Mapping[K, V], Iterable[Tuple[K, V]]]
 
+#: The type variable for a parameter used to create a probability dictionary.
+DictData = TypeVar(
+    'DictData',
+    # This type is even worse than it needs to be, because mypy
+    # doesn't know that `float` is a `Real`.
+    # https://github.com/python/mypy/issues/3186
+    Mapping[Any, Union[Real, float]],
+    Iterable[Tuple[Any, Union[Real, float]]],
+)
+
 # TODO - consider using https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html
 # It doesn't seem to provide any of the arithmetic, though, so using scipy just
 # to generate the cdf seems like overkill.
@@ -56,12 +66,7 @@ class DRV(object):
       this is used only for the string representation, but might in future
       help support lazily-evaluated DRVs.
     """
-    def __init__(self,
-                 # This type is even worse than it needs to be, because mypy
-                 # doesn't know that `float` is a `Real`.
-                 # https://github.com/python/mypy/issues/3186
-                 distribution: DictConstructor[Any, Union[Real, float]],
-                 tree: ExpressionTree = None):
+    def __init__(self, distribution: DictData, tree: ExpressionTree = None):
         self.__dist = MappingProxyType(dict(distribution))
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
