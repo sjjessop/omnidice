@@ -14,6 +14,7 @@ setuptools.setup(
             'coverage',
             'flake8',
             'm2r',
+            'Pygments>=2.6.1',
             'sphinx>=3.1.2',
         ],
         'pd': ['pandas'],

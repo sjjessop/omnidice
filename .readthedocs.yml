@@ -1,0 +1,17 @@
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+formats:
+  - htmlzip
+
+python:
+  version: 3.7
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - dev
+
+sphinx:
+  configuration: docn/conf.py
