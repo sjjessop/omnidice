@@ -3,7 +3,7 @@ import os
 import re
 
 def check_file(filename):
-    return os.path.splitext(filename)[1] == '.py'
+    return os.path.splitext(filename)[1] in ('.py', '.md', '.yml', '.rst')
 
 def check_dir(dirname):
     if dirname.startswith('.'):
