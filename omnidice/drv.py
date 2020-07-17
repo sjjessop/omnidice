@@ -378,7 +378,9 @@ class DRV(object):
             yield (reroll_value * (idx + 1), reroll_prob ** (idx + 1))
         postfix = '.explode()' if rerolls == 50 else f'.explode({rerolls!r})'
         return self._reduced(iter_pairs(), tree=self._combine_post(postfix))
-    def apply(self, func: Callable[[Any], Any], tree: ExpressionTree = None):
+    def apply(self,
+              func: Callable[[Any], Any],
+              tree: ExpressionTree = None) -> 'DRV':
         """
         Apply a unary function to the values produced by this DRV. If `func` is
         an injective (one-to-one) function, then the probabilities are
@@ -390,13 +392,13 @@ class DRV(object):
         :param tree: The expression from which this object was defined.
         """
         return DRV._reduced(self._items(), func, tree=tree)
-    def _apply2(self, func, right, connective=None):
+    def _apply2(self, func, right, connective=None) -> 'DRV':
         """Apply a binary function, with the values of this DRV on the left."""
         expr_tree = self._combine(self, right, connective)
         if isinstance(right, DRV):
             return self._cross_reduce(func, right, tree=expr_tree)
         return self.apply(lambda x: func(x, right), tree=expr_tree)
-    def _cross_reduce(self, func, right, tree=None):
+    def _cross_reduce(self, func, right, tree=None) -> 'DRV':
         """
         Take the cross product of self and right, then reduce by applying func.
         """
@@ -418,13 +420,13 @@ class DRV(object):
             for (rvalue, rprob) in right._items():
                 yield ((lvalue, rvalue), lprob * rprob)
     @staticmethod
-    def _reduced(iterable, func=lambda x: x, tree=None):
-        distribution = collections.defaultdict(int)
+    def _reduced(iterable, func=lambda x: x, tree=None) -> 'DRV':
+        distribution: dict = collections.defaultdict(int)
         for value, prob in iterable:
             distribution[func(value)] += prob
         return DRV(distribution, tree=tree)
     @staticmethod
-    def _weighted_average(iterable, tree=None):
+    def _weighted_average(iterable, tree=None) -> 'DRV':
         def iter_pairs():
             for drv, weight in iterable:
                 yield from drv._weighted_items(weight)

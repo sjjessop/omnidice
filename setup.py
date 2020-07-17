@@ -14,9 +14,13 @@ setuptools.setup(
             'coverage',
             'flake8',
             'm2r',
+            'mypy>=0.782',
             'Pygments>=2.6.1',
             'sphinx>=3.1.2',
         ],
         'pd': ['pandas'],
-    }
+    },
+    package_data={
+        'omnidice': ['py.typed'],
+    },
 )

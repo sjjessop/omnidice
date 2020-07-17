@@ -19,7 +19,9 @@ jobs:
           pip freeze
 
       - name: Lint
-        run: flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
+        run: |
+          flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
+          mypy -p omnidice
 
       - name: Test without Pandas
         run: pytest
