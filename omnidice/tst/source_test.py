@@ -2,8 +2,10 @@
 import os
 import re
 
+unix_files = {'.py', '.md', '.yml', '.rst', '.ini'}
+
 def check_file(filename):
-    return os.path.splitext(filename)[1] in ('.py', '.md', '.yml', '.rst')
+    return os.path.splitext(filename)[1] in unix_files
 
 def check_dir(dirname):
     if dirname.startswith('.'):
