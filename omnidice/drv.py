@@ -1,6 +1,8 @@
 
 from bisect import bisect_left
 import collections
+from fractions import Fraction
+from math import gcd
 from numbers import Real
 import operator
 import os
@@ -72,6 +74,7 @@ class DRV(object):
         # need it if the variable is actually sampled. Intermediate values in
         # building up a complex DRV won't ever be sampled, so save the work.
         self.__cdf = None
+        self.__lcm = None
         self.__expr_tree = tree
     def __repr__(self):
         if self.__expr_tree is not None:
@@ -148,6 +151,19 @@ class DRV(object):
                     yield value, 1
             self.__cdf_values, self.__cdf = map(tuple, zip(*iter_totals()))
         return self.__cdf
+    @property
+    def _lcm(self):
+        def lcm(a, b):
+            return (a * b) // gcd(a, b)
+        if self.__lcm is None:
+            result = 1
+            for _, prob in self._items():
+                if not isinstance(prob, Fraction):
+                    result = 0
+                    break
+                result = lcm(prob.denominator, result)
+            self.__lcm = result
+        return self.__lcm
     def sample(self, random: Random = rng):
         """
         Sample this variable.
@@ -156,7 +172,11 @@ class DRV(object):
           object shared by all instances of :class:`DRV`.
         :returns: One possible value of this variable.
         """
-        sample = random.random()
+        sample: Union[Real, float]
+        if self._lcm == 0:
+            sample = random.random()
+        else:
+            sample = Fraction(random.randrange(self._lcm) + 1, self._lcm)
         # The index of the first cumulative probability greater than or equal
         # to our random sample. If there's a repeated probability in the array,
         # that means there was a value with probability 0. So we don't want to

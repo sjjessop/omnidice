@@ -178,6 +178,3 @@ $ python -mtimeit -s"from omnidice.dice import d6" -c "200 @ d6.faster()"
 
 I have a TODO item to speed up the `@` operator using `numpy.convolve` where it
 is applicable, since the current code is completely generic and unoptimised.
-
-Precision when rolling dice is currently poor: a `float` is used to select the
-result. This will be fixed in future.
