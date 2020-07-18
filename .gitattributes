@@ -1,0 +1,7 @@
+
+# Same file extensions as we test in omnidice/tst/source_test.py
+*.py  text eol=lf
+*.md  text eol=lf
+*.yml text eol=lf
+*.rst text eol=lf
+*.ini text eol=lf

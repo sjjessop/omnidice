@@ -17,6 +17,7 @@ setuptools.setup(
             'mypy>=0.782',
             'Pygments>=2.6.1',
             'sphinx>=3.1.2',
+            'wheel',
         ],
         'pd': ['pandas'],
     },

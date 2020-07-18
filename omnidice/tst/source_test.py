@@ -2,6 +2,7 @@
 import os
 import re
 
+# These need to be listed in .gitattributes too
 unix_files = {'.py', '.md', '.yml', '.rst', '.ini'}
 
 def check_file(filename):
