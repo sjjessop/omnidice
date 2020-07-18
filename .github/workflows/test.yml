@@ -9,6 +9,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python: [3.7, 3.8]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: ${{ matrix.python }}
     steps:
       - uses: actions/checkout@v2
 
@@ -28,13 +31,19 @@ jobs:
           mypy -p omnidice
 
       - name: Test without Pandas
-        run: pytest
+        run: pytest --cov=omnidice --cov-branch --cov-report=term
 
       - name: Test with Pandas
         run: |
           pip install pandas
           pip freeze
-          pytest
+          pytest --cov=omnidice --cov-branch --cov-append --cov-report=xml --cov-report=term
 
       - name: Build wheel
         run: python setup.py bdist_wheel
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1.0.7
+        with:
+          file: ./coverage.xml
+          env_vars: OS,PYTHON

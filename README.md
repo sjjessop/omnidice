@@ -5,7 +5,8 @@ variables. [Full documentation](https://omnidice.readthedocs.io/en/latest/).
 
 [![Documentation status](https://readthedocs.org/projects/omnidice/badge/?version=latest)](https://omnidice.readthedocs.io/en/latest/?badge=latest)
 [![Test status](https://github.com/sjjessop/omnidice/workflows/tests/badge.svg)](https://github.com/sjjessop/omnidice/actions?query=workflow%3Atests)
-[![Badges](https://img.shields.io/badge/badges-3-green.svg)](https://shields.io/)
+[![codecov](https://codecov.io/gh/sjjessop/omnidice/branch/master/graph/badge.svg)](https://codecov.io/gh/sjjessop/omnidice)
+[![Badges](https://img.shields.io/badge/badges-4-green.svg)](https://shields.io/)
 
 ## Purpose
 

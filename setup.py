@@ -15,6 +15,7 @@ setuptools.setup(
             'flake8',
             'm2r',
             'mypy>=0.782',
+            'pytest-cov',
             'Pygments>=2.6.1',
             'sphinx>=3.1.2',
             'wheel',
