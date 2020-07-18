@@ -31,3 +31,6 @@ jobs:
           pip install pandas
           pip freeze
           pytest
+
+      - name: Build wheel
+        run: python setup.py bdist_wheel
