@@ -76,6 +76,8 @@ class DRV(object):
         self.__cdf = None
         self.__lcm = None
         self.__expr_tree = tree
+        if not all(0 < prob <= 1 for value, prob in self._items()):
+            raise ValueError('Probability not in range')
     def __repr__(self):
         if self.__expr_tree is not None:
             return self.__expr_tree.bracketed()

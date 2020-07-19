@@ -10,6 +10,8 @@ class d(DRV):
     the integers from 1 to `sides` inclusive.
     """
     def __init__(self, sides: int):
+        if sides <= 0:
+            raise ValueError(sides)
         prob = Fraction(1, sides)
         super().__init__(
             ((idx, prob) for idx in range(1, sides + 1)),

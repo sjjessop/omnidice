@@ -1,4 +1,5 @@
 
+from fractions import Fraction
 import math
 
 import pytest
@@ -16,7 +17,7 @@ def test_d6():
     distribution[1] = 0
     assert d6.to_dict()[1] == pytest.approx(1 / 6)
 
-@pytest.mark.parametrize('sides', (2, 3, 4, 6, 8, 10, 12, 20, 100))
+@pytest.mark.parametrize('sides', (2, 3, 4, 6, 8, 10, 12, 20, 30, 100, 1000))
 def test_presets(sides):
     """All the usual dice are available"""
     result = getattr(dice, f'd{sides}').to_dict()
@@ -26,6 +27,11 @@ def test_presets(sides):
 def test_one_die(sides):
     """Create dice with any number of sides"""
     check_uniform(dice.d(sides), set(range(1, sides + 1)))
+
+@pytest.mark.parametrize('sides', (0, -1, 1.0, -1.0, 0.5, Fraction(3, 2)))
+def test_bad_die(sides):
+    with pytest.raises((ValueError, TypeError)):
+        dice.d(sides)
 
 def test_roll_die():
     """Use the roll() function to roll one die"""
