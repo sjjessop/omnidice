@@ -15,6 +15,14 @@ from typing import (
 from .expressions import Atom, ExpressionTree
 from .expressions import AttrExpression, BinaryExpression, UnaryExpression
 
+try:
+    import numpy as np
+except ModuleNotFoundError:
+    np = None
+
+CONVOLVE_OPTIMISATION = True
+CONVOLVE_SIZE_LIMIT = 1000
+
 #: The random number generator used as a default by :meth:`DRV.sample()`. If
 #: you need reproducible results, then you can call
 #: :py:func:`omnidice.drv.rng.seed() <random.seed()>` to set its state.
@@ -75,6 +83,7 @@ class DRV(object):
         # building up a complex DRV won't ever be sampled, so save the work.
         self.__cdf = None
         self.__lcm = None
+        self.__intvalued = None
         self.__expr_tree = tree
         # Computed probabilities can hit 0 due to float underflow, but maybe
         # we should strip out anything with probability 0.
@@ -188,6 +197,11 @@ class DRV(object):
         # exactly equal to the repeated probability!
         idx = bisect_left(self.cdf, sample)
         return self.__cdf_values[idx]
+    @property
+    def _intvalued(self):
+        if self.__intvalued is None:
+            self.__intvalued = all(isinstance(x, int) for x in self.__dist)
+        return self.__intvalued
     def __add__(self, right) -> 'DRV':
         """
         Handler for :code:`self + right`.
@@ -200,6 +214,38 @@ class DRV(object):
         is many-to-one (for constant numbers it is one-to-one provided overflow
         does not occur).
         """
+        while CONVOLVE_OPTIMISATION:
+            if np is None:
+                break
+            if not isinstance(right, DRV):
+                break
+            product_size = len(self.__dist) * len(right.__dist)
+            if product_size <= CONVOLVE_SIZE_LIMIT:
+                break
+            if not self._intvalued or not right._intvalued:
+                break
+            def get_range(dist):
+                return range(min(dist), max(dist) + 1)
+            self_values = get_range(self.__dist)
+            right_values = get_range(right.__dist)
+            # Very sparse arrays aren't faster to convolve.
+            if 100 * product_size <= len(self_values) * len(right_values):
+                break
+            final_probs = np.convolve(
+                np.array(tuple(self.__dist.get(x, 0) for x in self_values)),
+                np.array(tuple(right.__dist.get(x, 0) for x in right_values)),
+            )
+            values = range(
+                min(self_values) + min(right_values),
+                max(self_values) + max(right_values) + 1,
+            )
+            filtered = (final_probs > 0)
+            values = np.array(values)[filtered].tolist()
+            final_probs = final_probs[filtered]
+            return DRV(
+                zip(values, final_probs),
+                tree=self._combine(self, right, '+'),
+            )
         return self._apply2(operator.add, right, connective='+')
     def __sub__(self, right) -> 'DRV':
         """
@@ -214,7 +260,12 @@ class DRV(object):
         subtraction is many-to-one (for contant numbers it is one-to-one
         provided overflow does not occur).
         """
-        return self._apply2(operator.sub, right, connective='-')
+        if isinstance(right, DRV):
+            # So that we get the convolve optimisation
+            tree = self._combine(self, right, '-')
+            return (self + -right).replace_tree(tree)
+        else:
+            return self._apply2(operator.sub, right, connective='-')
     def __mul__(self, right):
         """
         Handler for :code:`self * right`.

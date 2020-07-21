@@ -62,3 +62,22 @@ def test_bad_probabilities():
         DRV({1: 1.00000000001})
     # They don't have to add up to exactly 1, though
     DRV({1: 0.333, 2: 0.333, 3: 0.333})
+
+def test_convolve():
+    """
+    There is an optimisation which uses numpy.convolve for large additions.
+    Run some bigger jobs, to make sure it all works correctly.
+    """
+    def check(result):
+        result = result.to_dict()
+        assert set(result) == set(range(2, 2001))
+        for idx in range(2, 1002):
+            assert result[idx] == pytest.approx((idx - 1) / 1E6)
+        for idx in range(1002, 2001):
+            assert result[idx] == pytest.approx((2001 - idx) / 1E6)
+    d1000 = DRV({idx: 0.001 for idx in range(1, 1001)})
+    check(d1000 + d1000)
+    floaty = d1000.apply(float)
+    check(floaty + floaty)
+    sparse = d1000.apply(lambda x: x * 1000)
+    check((sparse + sparse).apply(lambda x: x // 1000))
