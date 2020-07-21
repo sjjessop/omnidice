@@ -187,6 +187,3 @@ $ python -mtimeit -s"from omnidice.dice import d6" -c "100 @ d6.faster()"
 $ python -mtimeit -s"from omnidice.dice import d6" -c "200 @ d6.faster()"
 2 loops, best of 5: 3.45 msec per loop
 ```
-
-I have a TODO item to speed up the `@` operator using `numpy.convolve` where it
-is applicable, since the current code is completely generic and unoptimised.
