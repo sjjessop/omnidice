@@ -18,19 +18,6 @@ advantage is it to have one extra point", and the like.
 
 ## Getting Started
 
-### Installation
-
-```bash
-git clone git@github.com:sjjessop/omnidice.git
-cd omnidice
-python setup.py install
-pytest
-```
-
-If you prefer you can of course install with `pip install -e omnidice`, or even
-build the wheel and then install that. Or just add the `omnidice` directory to
-your PYTHONPATH.
-
 ### Use
 
 Omnidice provides a type `DRV` representing a discrete random variable, plus
@@ -102,6 +89,30 @@ True    0.15200617283950618
 For additional examples of use, see the test code in
 :file:`omnidice/tst/dice_test.py`
 
+### Installation
+
+```bash
+git clone git@github.com:sjjessop/omnidice.git
+cd omnidice
+python setup.py install
+pytest
+```
+
+If you prefer you can of course install with `pip install -e omnidice`, or even
+build the wheel and then install that. Or just add the `omnidice` directory to
+your PYTHONPATH.
+
+When running the tests you might see a warning:
+
+```text
+RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility.
+Expected 192 from C header, got 216 from PyObject
+```
+
+[This should not be a problem](https://github.com/numpy/numpy/issues/12785),
+but I can't get to the bottom of why it happens at all for me, even when
+everything was installed via Anaconda.
+
 ### Optional dependency
 
 If you install `pandas`, then you can write the probability distribution to
@@ -162,19 +173,19 @@ $ python -mtimeit -s"from omnidice.dice import d6" -c "10 @ d6"
 50 loops, best of 5: 4.58 msec per loop
 
 $ python -mtimeit -s"from omnidice.dice import d6" -c "100 @ d6"
-1 loop, best of 5: 833 msec per loop
+1 loop, best of 5: 782 msec per loop
 
 $ python -mtimeit -s"from omnidice.dice import d6" -c "200 @ d6"
-1 loop, best of 5: 5.37 sec per loop
+1 loop, best of 5: 5.01 sec per loop
 
 $ python -mtimeit -s"from omnidice.dice import d6" -c "10 @ d6.faster()"
-500 loops, best of 5: 344 usec per loop
+500 loops, best of 5: 366 usec per loop
 
 $ python -mtimeit -s"from omnidice.dice import d6" -c "100 @ d6.faster()"
-10 loops, best of 5: 28.8 msec per loop
+10 loops, best of 5: 1.82 msec per loop
 
 $ python -mtimeit -s"from omnidice.dice import d6" -c "200 @ d6.faster()"
-2 loops, best of 5: 118 msec per loop
+2 loops, best of 5: 3.45 msec per loop
 ```
 
 I have a TODO item to speed up the `@` operator using `numpy.convolve` where it

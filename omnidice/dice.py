@@ -17,6 +17,9 @@ class d(DRV):
             ((idx, prob) for idx in range(1, sides + 1)),
             tree=Atom(f'd{sides}' if sides <= 100 else f'd({sides})')
         )
+    @property
+    def _intvalued(self):
+        return True
     # This is subtle. Because of some rules in Python to help subclasses
     # override operators successfully, we have to suppress the comparisons.
     # Otherwise some_drv < d(6) gets evaluated as d(6) > some_drv, which is

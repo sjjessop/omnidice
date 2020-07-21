@@ -77,6 +77,12 @@ def test_advanced_expressions():
     assert result.keys() == set(range(2, 13))
     assert sum(result.values()) == pytest.approx(1)
     assert result[7] == pytest.approx(result[12] * 6)
+    result = (dice.d100 - dice.d100).to_dict()
+    assert result.keys() == set(range(-99, 100))
+    assert sum(result.values()) == pytest.approx(1)
+    assert result[0] == pytest.approx(0.01)
+    for idx in range(100):
+        assert result[idx] == result[-idx]
     check_uniform(
         (dice.d10 - 1) * 10 + dice.d10,
         set(range(1, 101)),
