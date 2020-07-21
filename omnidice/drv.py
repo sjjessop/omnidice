@@ -257,7 +257,7 @@ class DRV(object):
         independent).
 
         As with :meth:`apply()`, probabilities are added up wherever
-        subtraction is many-to-one (for contant numbers it is one-to-one
+        subtraction is many-to-one (for constant numbers it is one-to-one
         provided overflow does not occur).
         """
         if isinstance(right, DRV):
