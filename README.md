@@ -18,19 +18,6 @@ advantage is it to have one extra point", and the like.
 
 ## Getting Started
 
-### Installation
-
-```bash
-git clone git@github.com:sjjessop/omnidice.git
-cd omnidice
-python setup.py install
-pytest
-```
-
-If you prefer you can of course install with `pip install -e omnidice`, or even
-build the wheel and then install that. Or just add the `omnidice` directory to
-your PYTHONPATH.
-
 ### Use
 
 Omnidice provides a type `DRV` representing a discrete random variable, plus
@@ -101,6 +88,19 @@ True    0.15200617283950618
 
 For additional examples of use, see the test code in
 :file:`omnidice/tst/dice_test.py`
+
+### Installation
+
+```bash
+git clone git@github.com:sjjessop/omnidice.git
+cd omnidice
+python setup.py install
+pytest
+```
+
+If you prefer you can of course install with `pip install -e omnidice`, or even
+build the wheel and then install that. Or just add the `omnidice` directory to
+your PYTHONPATH.
 
 ### Optional dependency
 
