@@ -1,9 +1,10 @@
 
 from fractions import Fraction
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
+from omnidice import drv
 from omnidice.drv import DRV
 from omnidice.expressions import Atom
 
@@ -96,9 +97,7 @@ def test_tree():
         def __init__(self, value):
             self.value = value
         def __add__(self, other):
-            if other is None:
-                return self.value
-            return self.value + other
+            return self.value
 
     # Test the case of adding None to a DRV with an expression tree. This
     # requires a manually-specified tree because the "usual" ways of
@@ -113,3 +112,21 @@ def test_tree():
     # Test the same thing without the expression tree, for comparison
     drv = DRV({Addable(1): Fraction(1, 2), Addable(2): Fraction(1, 2)})
     assert repr(drv + None) == 'DRV({1: Fraction(1, 2), 2: Fraction(1, 2)})'
+
+def test_convolve_switch():
+    """
+    There's a switch to enable/disable the numpy.convolve optimisation.
+
+    This feature is used by scripts/convolve_performance.py, which isn't run
+    as part of the tests, so we should at least test that it's available,
+    enabled by default, and the code runs either with or without it.
+    """
+    assert drv.CONVOLVE_OPTIMISATION
+    # This test doesn't even ensure that the optimisation is used, just that
+    # flipping the switch doesn't immediately fail.
+    with patch('omnidice.drv.CONVOLVE_OPTIMISATION', True):
+        result1 = (10 @ DRV({1: 0.5, 2: 0.5})).to_dict()
+    with patch('omnidice.drv.CONVOLVE_OPTIMISATION', False):
+        result2 = (10 @ DRV({1: 0.5, 2: 0.5})).to_dict()
+    assert result1.keys() == result2.keys()
+    assert list(result1.values()) == list(map(pytest.approx, result2.values()))

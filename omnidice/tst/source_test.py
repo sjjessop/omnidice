@@ -13,9 +13,7 @@ def check_dir(dirname):
         return False
     if dirname.endswith('.egg-info'):
         return False
-    if dirname == 'htmlcov':
-        return False
-    return True
+    return dirname != 'htmlcov'
 
 def test_linebreaks():
     for path, dirs, files in os.walk('.'):

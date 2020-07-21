@@ -336,10 +336,10 @@ def check_uniform(die, expected_values):
     assert die.sample() in expected_values
     assert dice.roll(die) in expected_values
     rolls = set()
-    for idx in range(100):
-        rolls.update(die.sample() for _ in range(len(expected_values)))
-        if rolls == expected_values:
-            break
+    for idx in range(50):
+        # I would just break, but I'm playing for 100% branch coverage.
+        if rolls != expected_values:
+            rolls.update(die.sample() for _ in range(len(expected_values)))
     assert rolls == expected_values
 
 def check_approx(left, right):
