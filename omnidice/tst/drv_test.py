@@ -5,6 +5,7 @@ from unittest.mock import Mock
 import pytest
 
 from omnidice.drv import DRV
+from omnidice.expressions import Atom
 
 def test_sample():
     """
@@ -81,3 +82,34 @@ def test_convolve():
     check(floaty + floaty)
     sparse = d1000.apply(lambda x: x * 1000)
     check((sparse + sparse).apply(lambda x: x // 1000))
+
+def test_tree():
+    """
+    Extra tests for DRV expression trees, mainly for code coverage.
+    """
+    # Test the case of a postfix applied to a DRV with no expression tree.
+    drv = DRV({1: Fraction(1, 2), 2: Fraction(1, 2)})
+    assert repr(drv.faster()) == 'DRV({1: 0.5, 2: 0.5})'
+    assert drv.faster().to_dict() == drv.to_dict()
+
+    class Addable(object):
+        def __init__(self, value):
+            self.value = value
+        def __add__(self, other):
+            if other is None:
+                return self.value
+            return self.value + other
+
+    # Test the case of adding None to a DRV with an expression tree. This
+    # requires a manually-specified tree because the "usual" ways of
+    # constructing a DRV that would have a tree, don't result in anything that
+    # you can add None to.
+    drv = DRV(
+        {Addable(1): Fraction(1, 2), Addable(2): Fraction(1, 2)},
+        tree=Atom('MyCoin()')
+    )
+    assert repr(drv + None) == '(MyCoin() + None)'
+
+    # Test the same thing without the expression tree, for comparison
+    drv = DRV({Addable(1): Fraction(1, 2), Addable(2): Fraction(1, 2)})
+    assert repr(drv + None) == 'DRV({1: Fraction(1, 2), 2: Fraction(1, 2)})'

@@ -515,8 +515,6 @@ class DRV(object):
         Helper for combining two expressions into a combined expression.
         """
         for arg in args:
-            if arg is None:
-                return None
             if isinstance(arg, DRV) and arg.__expr_tree is None:
                 return None
         def unpack(subexpr):
@@ -527,11 +525,9 @@ class DRV(object):
             # Unary expression
             subexpr, connective = args
             return UnaryExpression(unpack(subexpr), connective)
-        elif len(args) == 3:
-            # Binary expression
-            left, right, connective = args
-            return BinaryExpression(unpack(left), unpack(right), connective)
-        raise TypeError
+        # Binary expression
+        left, right, connective = args
+        return BinaryExpression(unpack(left), unpack(right), connective)
     def _combine_post(self, postfix):
         if self.__expr_tree is None:
             return None
