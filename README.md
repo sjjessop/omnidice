@@ -27,6 +27,7 @@ rolls added together).
 
 ```pycon
 >>> from omnidice.dice import d4, d6, d8, d, roll
+>>> from omnidice.drv import p
 >>> roll(d6)
 2
 >>> roll(d6 + d4)
@@ -84,6 +85,8 @@ True    197/1296
 value   probability
 False   0.8479938271604939
 True    0.15200617283950618
+>>> print(p(2 @ d6 > 3 @ d6))
+197/1296
 ```
 
 For additional examples of use, see the test code in

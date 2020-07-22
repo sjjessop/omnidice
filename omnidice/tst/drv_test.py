@@ -130,3 +130,19 @@ def test_convolve_switch():
         result2 = (10 @ DRV({1: 0.5, 2: 0.5})).to_dict()
     assert result1.keys() == result2.keys()
     assert list(result1.values()) == list(map(pytest.approx, result2.values()))
+
+def test_p():
+    """
+    The p function returns the probability that a boolean DRV is True.
+    """
+    coins = (10 @ DRV({0: 0.5, 1: 0.5}))
+    assert drv.p(coins <= 0) == 0.5 ** 10
+    assert drv.p(coins >= 10) == 0.5 ** 10
+    assert drv.p(coins >= 5) > 0.5
+    assert drv.p(coins >= 5) + drv.p(coins < 5) == 1
+    # Non-boolean input is rejected, even though 0 == False and 1 == True
+    with pytest.raises(TypeError):
+        drv.p(coins)
+    # It still works when True (or False) is missing.
+    assert drv.p(DRV({False: 1})) == 0
+    assert drv.p(DRV({True: 1})) == 1

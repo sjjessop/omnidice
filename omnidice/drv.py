@@ -529,3 +529,14 @@ class DRV(object):
         if self.__expr_tree is None:
             return None
         return AttrExpression(self.__expr_tree, postfix)
+
+def p(var: DRV) -> Union[Real, float]:
+    """
+    Return the probability with which `var` takes value True.
+
+    :param var: A boolean-valued random variable, such as those resulting
+      from comparison operators.
+    """
+    if any(type(v) is not bool for v, p in var._items()):
+        raise TypeError('Variable must be boolean-valued')
+    return var.to_dict().get(True, 0)
