@@ -9,11 +9,12 @@ import os
 from random import Random
 from types import MappingProxyType
 from typing import (
-    Any, Callable, Dict, Iterable, Mapping, Tuple, TypeVar, Union
+    Any, Callable, Dict, Iterable, Mapping, Tuple, TypeVar, Union,
 )
 
-from .expressions import Atom, ExpressionTree
-from .expressions import AttrExpression, BinaryExpression, UnaryExpression
+from .expressions import (
+    Atom, AttrExpression, BinaryExpression, ExpressionTree, UnaryExpression,
+)
 
 try:
     import numpy as np
