@@ -171,8 +171,10 @@ def test_comparisons():
     # There are alternatives to equality comparisons
     # assert dice.d2 == dice.d(2)
     assert dice.d2.to_dict() == dice.d(2).to_dict()
+    assert dice.d2.is_same(dice.d(2))
     # assert dice.d2 != dice.d3
     assert dice.d2.to_dict() != dice.d3.to_dict()
+    assert not dice.d2.is_same(dice.d3)
     # assert (dice.d4 == 1).to_dict() == true_or_false(0.25)
     assert dice.d4.to_dict()[1] == 0.25
     # assert (dice.d4 != 2).to_dict() == true_or_false(0.75)
@@ -313,6 +315,7 @@ def test_faster(expr):
     float is likely to be faster. However it is less precise.
     """
     check_approx(expr.faster(), expr)
+    assert expr.faster().is_close(expr)
     # Not really testing much here, but it does cover a little bit of code
     # in the cdf function, which handles the case where rounding errors make
     # the total probability less than 1.

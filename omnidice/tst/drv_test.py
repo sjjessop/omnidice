@@ -1,5 +1,6 @@
 
 from fractions import Fraction
+import itertools
 from unittest.mock import Mock, patch
 
 import pytest
@@ -146,3 +147,48 @@ def test_p():
     # It still works when True (or False) is missing.
     assert drv.p(DRV({False: 1})) == 0
     assert drv.p(DRV({True: 1})) == 1
+
+def test_is_same():
+    """
+    The is_same() method tells you whether two objects represent the same
+    distribution.
+    """
+    small = DRV({0: 0.75, 1: 0.25})
+    big = DRV({1: 0.75, 2: 0.25})
+    booley = DRV({False: 0.75, True: 0.25})
+    fraction = DRV({0: Fraction(3, 4), 1: Fraction(1, 4)})
+    extra = DRV({0: 0.75, 2: 0, 1: 0.25})
+    unordered = DRV({1: 0.25, 0: 0.75})
+    approx = DRV({0: 0.75 + 1e-10, 1: 0.25 - 1e-10})
+    assert small.is_same(small)
+    assert (small + 1).is_same(big)
+    assert not small.is_same(big)
+    assert small.is_same(booley)
+    assert small.is_same(fraction)
+    assert small.is_same(extra)
+    assert small.is_same(unordered)
+    assert not small.is_same(approx)
+
+def test_is_close():
+    """
+    The is_close() method tells you whether two objects represent approximately
+    the same distribution.
+    """
+    small = DRV({0: 0.75, 1: 0.25})
+    big = DRV({1: 0.75, 2: 0.25})
+    booley = DRV({False: 0.75, True: 0.25})
+    fraction = DRV({0: Fraction(3, 4), 1: Fraction(1, 4)})
+    extra = DRV({0: 0.75, 2: 0, 1: 0.25})
+    unordered = DRV({1: 0.25, 0: 0.75})
+    approx = DRV({0: 0.75 + 1e-10, 1: 0.25 - 1e-10})
+    assert not small.is_close(big)
+    assert small.is_close(approx)
+    assert not small.is_close(approx, rel_tol=1e-12)
+    # It's down to rounding errors whether or not they're close with absolute
+    # tolerance 1e-10. In fact not, but just test either side of it.
+    assert not small.is_close(approx, abs_tol=5e-11, rel_tol=0)
+    assert small.is_close(approx, abs_tol=2e-10, rel_tol=0)
+    everything = [small, big, booley, fraction, extra, unordered, approx]
+    for a, b in itertools.product(everything, repeat=2):
+        if a.is_same(b):
+            assert a.is_close(b), (a, b)

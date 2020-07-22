@@ -26,7 +26,7 @@ convenience features for dice. The following operators are implemented: `+`,
 rolls added together).
 
 ```pycon
->>> from omnidice.dice import d4, d6, d8, d, roll
+>>> from omnidice.dice import d3, d4, d6, d8, d, roll
 >>> from omnidice.drv import p
 >>> roll(d6)
 2
@@ -87,6 +87,8 @@ False   0.8479938271604939
 True    0.15200617283950618
 >>> print(p(2 @ d6 > 3 @ d6))
 197/1296
+>>> ((d6 + 1) // 2).is_same(d3)
+True
 ```
 
 For additional examples of use, see the test code in

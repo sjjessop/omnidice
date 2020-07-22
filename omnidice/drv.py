@@ -2,7 +2,7 @@
 from bisect import bisect_left
 import collections
 from fractions import Fraction
-from math import gcd
+from math import gcd, isclose
 from numbers import Real
 import operator
 import os
@@ -90,6 +90,39 @@ class DRV(object):
         if self.__expr_tree is not None:
             return self.__expr_tree.bracketed()
         return f'DRV({self.__dist})'
+    def is_same(self, other: 'DRV') -> bool:
+        """
+        Return True if `self` and `other` have the same discrete probability
+        distribution. Possible values with 0 probability are excluded from the
+        comparison.
+        """
+        values = set(value for value, prob in self._items() if prob != 0)
+        othervalues = set(value for value, prob in other._items() if prob != 0)
+        if values != othervalues:
+            return False
+        return all(self.__dist[val] == other.__dist[val] for val in values)
+    def is_close(self, other: 'DRV', *, rel_tol=None, abs_tol=None) -> bool:
+        """
+        Return True if `self` and `other` have approximately the same discrete
+        probability distribution, within the specified tolerances. Possible
+        values with 0 probability are excluded from the comparison.
+
+        `rel_tol` and `abs_tol` are applied only to the probabilities, not to
+        the possible values. They are defined as for :func:`math.isclose`.
+        """
+        values = set(value for value, prob in self._items() if prob != 0)
+        othervalues = set(value for value, prob in other._items() if prob != 0)
+        if values != othervalues:
+            return False
+        kwargs = {}
+        if rel_tol is not None:
+            kwargs['rel_tol'] = rel_tol
+        if abs_tol is not None:
+            kwargs['abs_tol'] = abs_tol
+        return all(
+            isclose(self.__dist[val], other.__dist[val], **kwargs)
+            for val in values
+        )
     def to_dict(self) -> Dict[Any, Union[Real, float]]:
         """
         Return a dictionary mapping all possible values to probabilities.
