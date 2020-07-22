@@ -33,10 +33,6 @@ CONVOLVE_SIZE_LIMIT = 1000
 #: :meth:`DRV.sample()`.
 rng = Random(os.urandom(10))
 
-K = TypeVar('K')
-V = TypeVar('V')
-DictConstructor = Union[Mapping[K, V], Iterable[Tuple[K, V]]]
-
 #: The type variable for a parameter used to create a probability dictionary.
 DictData = TypeVar(
     'DictData',
