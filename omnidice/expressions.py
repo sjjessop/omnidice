@@ -7,7 +7,7 @@ from dataclasses import dataclass
 binary_precedence = {
     **{op: 3 for op in ('@', '*', '/', '//')},
     **{op: 2 for op in ('+', '-')},
-    **{op: 1 for op in ('<', '<=', '>', '>=')},
+    **{op: 1 for op in ('<', '<=', '>', '>=', '==', '!=')},
 }
 
 class ExpressionTree(ABC):

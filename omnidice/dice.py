@@ -37,6 +37,10 @@ class d(DRV):
         return self._compare(other, '__ge__')
     def __gt__(self, other):
         return self._compare(other, '__gt__')
+    def __eq__(self, other):
+        return self._compare(other, '__eq__')
+    def __ne__(self, other):
+        return self._compare(other, '__ne__')
 
 def roll(drv: DRV):
     """

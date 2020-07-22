@@ -66,6 +66,28 @@ class DRV(object):
     apply only to sampling: the original probabilities are still reported by
     :func:`to_dict()` etc.
 
+    Because :code:`==` is overridden to return a DRV (not a boolean), DRV
+    objects are not hashable and cannot be used in a set or as a dictionary
+    key, even though the objects are immutable. This means you cannot have a
+    DRV as a "possible value" of another DRV.
+
+    DRV also resists being considered in boolean context, so for example you
+    cannot in general test whether or not a DRV appears in a list::
+
+      >>> from omnidice.dice import d3, d6
+      >>> d3 in [d3, d6]
+      True
+      >>> d6 in [d3, d6]
+      Traceback (most recent call last):
+        File "<stdin>", line 1, in <module>
+        File "omnidice/drv.py", line 452, in __bool__
+          raise ValueError('The truth value of a random variable is ambiguous')
+      ValueError: The truth value of a random variable is ambiguous
+
+    This is the same solution used by (for example) :obj:`numpy.array`. If the
+    object allowed standard boolean conversion then :code:`d4 in [d3, d6]`
+    would be True, which is unacceptably surprising!
+
     :param distribution: Any value from which a dictionary can be constructed,
       that is a :obj:`Mapping` or :obj:`Iterable` of (value, probability)
       pairs.
@@ -400,6 +422,56 @@ class DRV(object):
         is many-to-one (for numbers it is one-to-one).
         """
         return self.apply(operator.neg, tree=self._combine(self, '-'))
+    def __eq__(self, right) -> 'DRV':  # type: ignore[override]
+        """
+        Handler for :code:`self == right`.
+
+        Return a random variable which takes value :obj:`True` where `self` is
+        equal to `right`, and :obj:`False` otherwise. `right` can be either a
+        constant or another DRV (in which case the result assumes that the two
+        random variables are independent).
+
+        If either :obj:`True` or :obj:`False` cannot happen then the result
+        has only one possible value, with probability 1. There is no possible
+        value with probability 0.
+        """
+        if isinstance(right, DRV):
+            small, big = sorted([self, right], key=lambda x: len(x.__dist))
+            prob = sum(
+                prob * big.__dist.get(val, 0)
+                for val, prob in small._items()
+            )
+        else:
+            prob = self.__dist.get(right)
+        if not prob:
+            return DRV({False: 1})
+        if prob >= 1.0:
+            return DRV({True: 1})
+        return DRV(
+            {False: 1 - prob, True: prob},
+            tree=self._combine(self, right, '=='),
+        )
+    def __ne__(self, right: 'DRV') -> 'DRV':  # type: ignore[override]
+        """
+        Handler for :code:`self != right`.
+
+        Return a random variable which takes value :obj:`True` where `self` is
+        not equal to `right`, and :obj:`False` otherwise. `right` can be either
+        a constant or another DRV (in which case the result assumes that the
+        two random variables are independent).
+
+        If either :obj:`True` or :obj:`False` cannot happen then the result
+        has only one possible value, with probability 1. There is no possible
+        value with probability 0.
+        """
+        return (
+            (self == right)
+            .apply(operator.not_)
+            .replace_tree(self._combine(self, right, '!='))
+        )
+    def __bool__(self):
+        # Prevent DRVs being truthy, and hence "3 in [DRV({2: 1})]" is true.
+        raise ValueError('The truth value of a random variable is ambiguous')
     def __le__(self, right) -> 'DRV':
         """
         Handler for :code:`self <= right`.

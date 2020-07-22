@@ -192,3 +192,21 @@ def test_is_close():
     for a, b in itertools.product(everything, repeat=2):
         if a.is_same(b):
             assert a.is_close(b), (a, b)
+
+def test_equality():
+    """
+    Equality operators are already tested by dice_tests.py, but here we check
+    some corner cases.
+    """
+    # Impossible values are excluded.
+    var = DRV({'H': 0.5, 'T': 0.5})
+    assert (var == 'H').to_dict() == {True: 0.5, False: 0.5}
+    assert (var == 'X').to_dict() == {False: 1}
+    cheat = DRV({'H': 1})
+    assert (cheat == 'H').to_dict() == {True: 1}
+    assert (cheat == 'X').to_dict() == {False: 1}
+    # No boolean conversion
+    with pytest.raises(ValueError):
+        var in [cheat, var]
+    with pytest.raises(ValueError):
+        1 in [cheat, var]

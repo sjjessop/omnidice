@@ -22,8 +22,8 @@ advantage is it to have one extra point", and the like.
 
 Omnidice provides a type `DRV` representing a discrete random variable, plus
 convenience features for dice. The following operators are implemented: `+`,
-`-`, `*`, `/`, `//`, `<`, `<=`, `>`, `>=` and `@` (which represents multiple
-rolls added together).
+`-`, `*`, `/`, `//`, `<`, `<=`, `>`, `>=`, `==`, `!=`, and `@` (which
+represents multiple rolls added together).
 
 ```pycon
 >>> from omnidice.dice import d3, d4, d6, d8, d, roll
@@ -89,6 +89,8 @@ True    0.15200617283950618
 197/1296
 >>> ((d6 + 1) // 2).is_same(d3)
 True
+>>> (((d6 + 1) // 2) == d3).to_dict()
+{False: Fraction(2, 3), True: Fraction(1, 3)}
 ```
 
 For additional examples of use, see the test code in
@@ -139,6 +141,14 @@ to do your own computations with them:
 >>> d6.to_dict()
 {1: Fraction(1, 6), 2: Fraction(1, 6), 3: Fraction(1, 6), 4: Fraction(1, 6), 5: Fraction(1, 6), 6: Fraction(1, 6)}
 ```
+
+## Quirks
+
+### Equality
+
+Because `==` is overridden to return a `DRV` (not a boolean), `DRV` objects are
+not hashable and cannot be used in sets or dictionaries. They also raise an
+exception in boolean context.
 
 ## Performance and precision
 

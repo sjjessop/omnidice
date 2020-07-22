@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from omnidice import dice
+from omnidice import dice, drv
 
 def test_d6():
     """Basic usage of a die"""
@@ -167,17 +167,29 @@ def test_comparisons():
         assert (dice.d4 < idx).to_dict() == true_or_false(idx * 0.25 - 0.25), idx
         assert (dice.d4 >= idx).to_dict() == true_or_false((5 - idx) * 0.25), idx
         assert (dice.d4 > idx).to_dict() == true_or_false((4 - idx) * 0.25), idx
+        assert (dice.d4 == idx).to_dict() == true_or_false(0.25 if 1 <= idx <= 4 else 0), idx
+        assert (dice.d4 != idx).to_dict() == true_or_false(0.75 if 1 <= idx <= 4 else 1), idx
 
-    # There are alternatives to equality comparisons
-    # assert dice.d2 == dice.d(2)
+    assert (dice.d2 == dice.d(2)).to_dict() == true_or_false(0.5)
+    assert (dice.d2 != dice.d4).to_dict() == true_or_false(0.75)
+
+    # Because we defined == and != analogously to < etc, you have to use other
+    # methods if you want to compare the whole distribution.
+    # Instead of dice.d2 == dice.d(2)
     assert dice.d2.to_dict() == dice.d(2).to_dict()
     assert dice.d2.is_same(dice.d(2))
-    # assert dice.d2 != dice.d3
+    # Instead of dice.d2 != dice.d3
     assert dice.d2.to_dict() != dice.d3.to_dict()
     assert not dice.d2.is_same(dice.d3)
-    # assert (dice.d4 == 1).to_dict() == true_or_false(0.25)
+
+    # Techniques to pull out individual probabilities
+    assert drv.p(dice.d4 == 1) == 0.25
+    assert (dice.d4 == 1).to_dict() == true_or_false(0.25)
     assert dice.d4.to_dict()[1] == 0.25
-    # assert (dice.d4 != 2).to_dict() == true_or_false(0.75)
+    # .. and their negations
+    assert drv.p(dice.d4 != 2) == 0.75
+    assert drv.p(dice.d4 != 2) == 1 - drv.p(dice.d4 == 2)
+    assert (dice.d4 != 2).to_dict() == true_or_false(0.75)
     dist = dice.d4.to_dict().items()
     assert sum(prob for value, prob in dist if value != 2) == 0.75
     assert 1 - dice.d4.to_dict()[2] == 0.75
@@ -238,6 +250,12 @@ def test_repr():
     check(dice.d(6), 'd6')
     check(-dice.d6, '(-d6)')
     check(-(dice.d6 + dice.d4), '(-(d6 + d4))')
+    check(dice.d6 < 1, '(d6 < 1)')
+    check(dice.d6 <= 1, '(d6 <= 1)')
+    check(dice.d6 > 1, '(d6 > 1)')
+    check(dice.d6 >= 1, '(d6 >= 1)')
+    check(dice.d6 == 1, '(d6 == 1)')
+    check(dice.d6 != 1, '(d6 != 1)')
     check(
         (2 @ dice.d4) * (dice.d6 + dice.d(10)) - (8 @ dice.d4 - 5),
         '((2 @ d4) * (d6 + d10) - (8 @ d4 - 5))',
@@ -247,6 +265,8 @@ def test_repr():
     check(dice.d6 - (dice.d6 - dice.d6), '(d6 - (d6 - d6))')
     check((dice.d6 + dice.d6) - dice.d6, '(d6 + d6 - d6)')
     check((dice.d6 + dice.d6) < dice.d6, '(d6 + d6 < d6)')
+    check((dice.d6 + dice.d6) == dice.d6, '(d6 + d6 == d6)')
+    check((dice.d6 + dice.d6) != dice.d6, '(d6 + d6 != d6)')
     check((dice.d6 + dice.d6) * dice.d6, '((d6 + d6) * d6)')
     check(
         (dice.d6 <= dice.d6) <= (dice.d6 <= dice.d6),
