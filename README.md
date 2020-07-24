@@ -1,7 +1,7 @@
 # Omnidice
 
 A Python library for arithmetic involving dice and other discrete random
-variables. [Full documentation](https://omnidice.readthedocs.io/en/latest/).
+variables. [Full documentation](https://omnidice.readthedocs.io/).
 
 [![Documentation status](https://readthedocs.org/projects/omnidice/badge/?version=latest)](https://omnidice.readthedocs.io/en/latest/?badge=latest)
 [![Test status](https://github.com/sjjessop/omnidice/workflows/tests/badge.svg)](https://github.com/sjjessop/omnidice/actions?query=workflow%3Atests)
@@ -99,7 +99,7 @@ For additional examples of use, see the test code in
 ### Installation
 
 ```bash
-git clone git@github.com:sjjessop/omnidice.git
+git clone -b release git@github.com:sjjessop/omnidice.git
 cd omnidice
 python setup.py install
 pytest
@@ -202,3 +202,12 @@ $ python -mtimeit -s"from omnidice.dice import d6" -c "100 @ d6.faster()"
 $ python -mtimeit -s"from omnidice.dice import d6" -c "200 @ d6.faster()"
 2 loops, best of 5: 3.45 msec per loop
 ```
+
+## Versioning
+
+Version numbers follow [Semantic Versioning](https://semver.org/). However, the
+version number in the code might only be updated at the point of creating a
+[release tag](https://github.com/sjjessop/omnidice/tags). So, if you're working
+in the repo then the version number does not indicate compatibility with past
+releases, except that the `HEAD` of the `release` branch is always the last
+release.
