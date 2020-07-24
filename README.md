@@ -6,7 +6,8 @@ variables. [Current release documentation](https://omnidice.readthedocs.io/).
 [![Documentation status](https://readthedocs.org/projects/omnidice/badge/?version=latest)](https://omnidice.readthedocs.io/en/latest/?badge=latest)
 [![Test status](https://github.com/sjjessop/omnidice/workflows/tests/badge.svg)](https://github.com/sjjessop/omnidice/actions?query=workflow%3Atests)
 [![codecov](https://codecov.io/gh/sjjessop/omnidice/branch/master/graph/badge.svg)](https://codecov.io/gh/sjjessop/omnidice)
-[![Badges](https://img.shields.io/badge/badges-4-green.svg)](https://shields.io/)
+[![Python versions](https://img.shields.io/badge/python-3.7%20%7C%203.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![Badges](https://img.shields.io/badge/badges-5-green.svg)](https://shields.io/)
 
 ## Purpose
 
@@ -233,3 +234,11 @@ version number in the code might only be updated at the point of creating a
 in the repo then the version number does not indicate compatibility with past
 releases, except that the `HEAD` of the `release` branch is always the current
 (most recent) release.
+
+## Compatibility
+
+Omnidice does not work with Python versions 3.6 or lower, because it uses the
+`dataclasses` module.
+
+It should work with pretty much any versions of its optional dependencies,
+`numpy` and `pandas`.
