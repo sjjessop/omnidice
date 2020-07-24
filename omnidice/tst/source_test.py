@@ -28,6 +28,10 @@ def test_version_numbers():
     with open('setup.py') as infile:
         setup_pattern = r"^\s*version='([^']*)',?$"
         setup = re.search(setup_pattern, infile.read(), re.MULTILINE).group(1)
+    with open('omnidice/__init__.py') as infile:
+        init_pattern = "^__version__ = '([^']*)'$"
+        init = re.search(init_pattern, infile.read(), re.MULTILINE).group(1)
+    assert init == setup
     with open('docn/conf.py') as infile:
         docn_pattern = "^release = '([^']*)'$"
         docn = re.search(docn_pattern, infile.read(), re.MULTILINE).group(1)
