@@ -4,6 +4,10 @@ from fractions import Fraction
 from .drv import DRV
 from .expressions import Atom
 
+#: A frozenset of integers, giving the numbers of sides of the standard dice
+#: provided as module attributes.
+preset_dice = frozenset({2, 3, 4, 6, 8, 10, 12, 20, 30, 100, 1000})
+
 class d(DRV):
     """
     One polyhedral die, or in general a uniform discrete random variable over
@@ -15,7 +19,7 @@ class d(DRV):
         prob = Fraction(1, sides)
         super().__init__(
             ((idx, prob) for idx in range(1, sides + 1)),
-            tree=Atom(f'd{sides}' if sides <= 100 else f'd({sides})')
+            tree=Atom(f'd{sides}' if sides in preset_dice else f'd({sides})')
         )
     @property
     def _intvalued(self):
@@ -56,6 +60,8 @@ def roll(drv: DRV):
     """
     return drv.sample()
 
+# These need to match preset_dice, but if we assign them in a loop then mypy
+# gets upset, because it doesn't know what attributes our module has.
 d2 = d(2)
 d3 = d(3)
 d4 = d(4)

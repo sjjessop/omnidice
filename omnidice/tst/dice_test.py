@@ -1,6 +1,7 @@
 
 from fractions import Fraction
 import math
+import re
 
 import pytest
 
@@ -283,6 +284,23 @@ def test_repr():
     check((-dice.d6).explode(), '(-d6).explode()')
     check(-dice.d6.faster(), '(-d6.faster())')
     check((-dice.d6).faster(), '(-d6).faster()')
+
+@pytest.mark.parametrize('sides', range(1, 150))
+def test_repr_sides(sides):
+    """
+    Regression test for bug introduced while adding mypy.
+    """
+    die = dice.d(sides)
+    check_approx(eval(repr(die), dice.__dict__), die)
+
+def test_preset_dice():
+    """
+    The module publishes which dice exist as module attributes.
+    """
+    pattern = re.compile(r'd\d+')
+    published = set(f'd{sides}' for sides in dice.preset_dice)
+    actual = set(filter(pattern.fullmatch, dice.__dict__))
+    assert published == actual
 
 def test_table():
     """
