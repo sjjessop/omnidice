@@ -1,7 +1,7 @@
 # Omnidice
 
 A Python library for arithmetic involving dice and other discrete random
-variables. [Full documentation](https://omnidice.readthedocs.io/).
+variables. [Current release documentation](https://omnidice.readthedocs.io/).
 
 [![Documentation status](https://readthedocs.org/projects/omnidice/badge/?version=latest)](https://omnidice.readthedocs.io/en/latest/?badge=latest)
 [![Test status](https://github.com/sjjessop/omnidice/workflows/tests/badge.svg)](https://github.com/sjjessop/omnidice/actions?query=workflow%3Atests)
@@ -98,16 +98,26 @@ For additional examples of use, see the test code in
 
 ### Installation
 
+This package is not on PyPI (yet). If you just want to use the current release,
+save the .whl file from
+[the releases page](https://github.com/sjjessop/omnidice/releases), then do:
+
 ```bash
-git clone -b release git@github.com:sjjessop/omnidice.git
+pip install --upgrade location_of_wheel_file
+```
+
+You should now be able to run any of the example code above.
+
+### Installation alternatives
+
+If you want to work with the source for the current release:
+
+```bash
+git clone --branch release https://github.com/sjjessop/omnidice.git
 cd omnidice
 python setup.py install
 pytest
 ```
-
-If you prefer you can of course install with `pip install -e omnidice`, or even
-build the wheel and then install that. Or just add the `omnidice` directory to
-your PYTHONPATH.
 
 When running the tests you might see a warning:
 
@@ -120,7 +130,19 @@ Expected 192 from C header, got 216 from PyObject
 but I can't get to the bottom of why it happens at all for me, even when
 everything was installed via Anaconda.
 
-### Optional dependency
+If you want the latest (unreleased) code, then use the `master` branch.
+
+If you know what you're doing then of course you are free to install by
+`python setup.py`, or `pip install -e .`, or by building a wheel file locally.
+
+Currently the code should work fine even if not installed (so, you could amend
+your `PYTHONPATH` or just run from the root of the repo). I might in future
+add features which use data files, and those won't necessarily work when the
+package isn't registered with `setuptools`.
+
+### Optional dependencies
+
+If you install `numpy`, then some operations will run faster.
 
 If you install `pandas`, then you can write the probability distribution to
 a `Series` object:
@@ -209,5 +231,5 @@ Version numbers follow [Semantic Versioning](https://semver.org/). However, the
 version number in the code might only be updated at the point of creating a
 [release tag](https://github.com/sjjessop/omnidice/tags). So, if you're working
 in the repo then the version number does not indicate compatibility with past
-releases, except that the `HEAD` of the `release` branch is always the last
-release.
+releases, except that the `HEAD` of the `release` branch is always the current
+(most recent) release.
