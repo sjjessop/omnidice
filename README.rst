@@ -120,13 +120,11 @@ For additional examples of use, see the test code in
 Installation
 ------------
 
-This package is not on PyPI (yet). If you just want to use the current release,
-save the .whl file from `the releases page
-<https://github.com/sjjessop/omnidice/releases>`_, then do:
+This package is not on PyPI (yet). If you just want to use the current release:
 
 .. code-block:: bash
 
-    pip install --upgrade location_of_wheel_file
+    pip install --upgrade https://github.com/sjjessop/omnidice/releases/latest/download/omnidice-v1-py3-none-any.whl
 
 You should now be able to run any of the example code above.
 
