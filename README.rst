@@ -124,7 +124,7 @@ This package is not on PyPI (yet). If you just want to use the current release:
 
 .. code-block:: bash
 
-    pip install --upgrade https://github.com/sjjessop/omnidice/releases/latest/download/omnidice-v1-py3-none-any.whl
+    pip install -U https://github.com/sjjessop/omnidice/releases/latest/download/omnidice-v1-py3-none-any.whl
 
 You should now be able to run any of the example code above.
 
