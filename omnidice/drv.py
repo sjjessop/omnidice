@@ -9,7 +9,7 @@ import os
 from random import Random
 from types import MappingProxyType
 from typing import (
-    Any, Callable, Dict, Iterable, Mapping, Tuple, TypeVar, Union,
+    Any, Callable, Dict, Iterable, Mapping, Tuple, TypeVar, Union, cast,
 )
 
 from .expressions import (
@@ -345,16 +345,21 @@ class DRV(object):
             raise ValueError(left)
         # Exponentiation by squaring. This isn't massively faster, but does
         # help a bit for hundreds of dice.
-        result = DRV({0: 1})
+        result = None
         so_far = self
         original = left
         while True:
             if left % 2 == 1:
-                result += so_far
+                if result is None:
+                    result = so_far
+                else:
+                    result += so_far
             left //= 2
             if left == 0:
                 break
             so_far += so_far
+        # left was non-zero, so result cannot still be None
+        result = cast(DRV, result)
         return result.replace_tree(self._combine(original, self, '@'))
     def __matmul__(self, right: 'DRV') -> 'DRV':
         """

@@ -51,6 +51,14 @@ def test_matmul():
     with pytest.raises(TypeError):
         float_drv @ float_drv
 
+def test_matmul_non_numeric():
+    """
+    The @ operator still works if the possible values aren't numbers, provided
+    they can be added together using the + operator.
+    """
+    coin = DRV({'H': 0.5, 'T': 0.5})
+    assert (2 @ coin).to_dict() == {x: 0.25 for x in ('HH', 'TT', 'HT', 'TH')}
+
 def test_bad_probabilities():
     """
     Probabilities passed to the constructor must be between 0 and 1.
