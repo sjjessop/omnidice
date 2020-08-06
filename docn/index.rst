@@ -9,6 +9,7 @@
 
    dice
    drv
+   systems
 
 * :ref:`genindex`
 * :ref:`modindex`
