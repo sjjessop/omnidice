@@ -8,9 +8,7 @@ import operator
 import os
 from random import Random
 from types import MappingProxyType
-from typing import (
-    Any, Callable, Dict, Iterable, Mapping, Tuple, TypeVar, Union, cast,
-)
+from typing import Any, Callable, Dict, Iterable, Mapping, Tuple, Union, cast
 
 from .expressions import (
     Atom, AttrExpression, BinaryExpression, ExpressionTree, UnaryExpression,
@@ -33,15 +31,13 @@ CONVOLVE_SIZE_LIMIT = 1000
 #: :meth:`DRV.sample()`.
 rng = Random(os.urandom(10))
 
-#: The type variable for a parameter used to create a probability dictionary.
-DictData = TypeVar(
-    'DictData',
-    # This type is even worse than it needs to be, because mypy
-    # doesn't know that `float` is a `Real`.
-    # https://github.com/python/mypy/issues/3186
-    Mapping[Any, Union[Real, float]],
-    Iterable[Tuple[Any, Union[Real, float]]],
-)
+#: Type alias for probabilities, to make signatures more concise. This is
+#: needed because mypy doesn't know that :obj:`float` implements
+#: :obj:`Real <numbers.Real>`. See https://github.com/python/mypy/issues/3186
+Probability = Union[Real, float]
+
+#: Type alias for a parameter used to create a probability dictionary.
+DictData = Union[Mapping[Any, Probability], Iterable[Tuple[Any, Probability]]]
 
 # TODO - consider using https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rv_discrete.html
 # It doesn't seem to provide any of the arithmetic, though, so using scipy just
@@ -95,7 +91,7 @@ class DRV(object):
       this is used only for the string representation, but might in future
       help support lazily-evaluated DRVs.
     """
-    def __init__(self, distribution: DictData, tree: ExpressionTree = None):
+    def __init__(self, distribution: 'DictData', tree: ExpressionTree = None):
         self.__dist = MappingProxyType(dict(distribution))
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
@@ -145,7 +141,7 @@ class DRV(object):
             isclose(self.__dist[val], other.__dist[val], **kwargs)
             for val in values
         )
-    def to_dict(self) -> Dict[Any, Union[Real, float]]:
+    def to_dict(self) -> Dict[Any, 'Probability']:
         """
         Return a dictionary mapping all possible values to probabilities.
         """
@@ -237,7 +233,7 @@ class DRV(object):
           object shared by all instances of :class:`DRV`.
         :returns: One possible value of this variable.
         """
-        sample: Union[Real, float]
+        sample: Probability
         if self._lcm == 0:
             sample = random.random()
         else:
@@ -611,7 +607,7 @@ class DRV(object):
         return DRV(distribution, tree=tree)
     @staticmethod
     def weighted_average(
-        iterable: Iterable[Tuple['DRV', Union[Real, float]]],
+        iterable: Iterable[Tuple['DRV', 'Probability']],
         tree: ExpressionTree = None,
     ) -> 'DRV':
         """
@@ -670,7 +666,7 @@ class DRV(object):
             return None
         return AttrExpression(self.__expr_tree, postfix)
 
-def p(var: DRV) -> Union[Real, float]:
+def p(var: DRV) -> 'Probability':
     """
     Return the probability with which `var` takes value True.
 
