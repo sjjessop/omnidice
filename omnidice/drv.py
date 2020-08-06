@@ -566,7 +566,7 @@ class DRV(object):
         """
         Apply a unary function to the values produced by this DRV. If `func` is
         an injective (one-to-one) function, then the probabilities are
-        unchanged. If `func` is many-to-one, then the probabilties are added
+        unchanged. If `func` is many-to-one, then the probabilities are added
         together.
 
         :param func: Function to map the values. Each value `x` is replaced by
