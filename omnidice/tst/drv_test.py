@@ -218,3 +218,15 @@ def test_equality():
         var in [cheat, var]
     with pytest.raises(ValueError):
         1 in [cheat, var]
+
+def test_weighted():
+    """
+    You can compute a DRV from disjoint cases.
+    """
+    var = DRV({1: 0.5, 2: 0.5})
+    var2 = DRV.weighted_average((
+        (var, 0.5),
+        (var + 2, 0.5),
+    ))
+    # So, var2 should be uniformly distributed
+    assert var2.is_same(DRV({x: 0.25 for x in range(1, 5)}))

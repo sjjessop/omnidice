@@ -380,7 +380,7 @@ class DRV(object):
                 if num_dice in self.__dist:
                     yield so_far, self.__dist[num_dice]
                 so_far += right
-        return DRV._weighted_average(
+        return DRV.weighted_average(
             iter_drvs(),
             tree=self._combine(self, right, '@'),
         )
@@ -571,7 +571,9 @@ class DRV(object):
 
         :param func: Function to map the values. Each value `x` is replaced by
           `func(x)`.
-        :param tree: The expression from which this object was defined.
+        :param tree: the expression from which this object was defined. If
+          ``None``, the result DRV is represented by listing out all the values
+          and probabilities.
         """
         return DRV._reduced(self._items(), func, tree=tree)
     def _apply2(self, func, right, connective=None) -> 'DRV':
@@ -608,7 +610,35 @@ class DRV(object):
             distribution[func(value)] += prob
         return DRV(distribution, tree=tree)
     @staticmethod
-    def _weighted_average(iterable, tree=None) -> 'DRV':
+    def weighted_average(
+        iterable: Iterable[Tuple['DRV', Union[Real, float]]],
+        tree: ExpressionTree = None,
+    ) -> 'DRV':
+        """
+        Compute a weighted average of DRVs, each with its own probability.
+
+        This is for when you have a set of mutually-exclusive events which can
+        happen, and then the final outcome occurs with a different known
+        distribution according to which of those events occurs. For example,
+        this function is used to implement the ``@`` operator when the
+        left-hand-side is a DRV. The first roll determines what the second roll
+        will be.
+
+        The DRVs that are averaged together do not need to be disjoint (that
+        is, they can have overlapping possible values). Whenever multiple
+        events lead to the same final outcome, the probabilities are combined:
+
+        https://en.wikipedia.org/wiki/Law_of_total_probability
+
+        :param iterable: Pairs, each containing a DRV and the probability of
+          that DRV being the one selected. The probabilities should add to 1,
+          but this is not enforced.
+        :param tree: the expression from which this object was defined. If
+          ``None``, the result DRV is represented by listing out all the values
+          and probabilities.
+
+        .. versionadded:: 1.1
+        """
         def iter_pairs():
             for drv, weight in iterable:
                 yield from drv._weighted_items(weight)
