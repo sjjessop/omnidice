@@ -19,7 +19,7 @@ variables. `Current release documentation <https://omnidice.readthedocs.io/>`_.
 
 .. image:: https://img.shields.io/badge/python-3.7%20%7C%203.8-blue.svg
    :alt: Python versions 3.7 3.8
-   :target: https://www.python.org/downloads/release/python-380/
+   :target: https://www.python.org/downloads/
 
 .. image:: https://img.shields.io/badge/badges-5-green.svg
    :alt: 5 badges
@@ -260,6 +260,43 @@ the version number in the code might only be updated at the point of creating a
 working in the repo then the version number does not indicate compatibility
 with past releases, except that the tip of the ``release`` branch is always the
 current (most recent) release.
+
+The following are not considered part of the published interface of this
+package, and can change without a major version number change:
+
+* Undocumented behaviour, including exceptions not explicitly documented. The
+  new behaviour could be a different exception, or could be some other
+  behaviour entirely (in which case it's probably a new feature).
+* Private functions (or other entities), meaning names that start with ``_``
+  other than dunder methods.
+* Behaviour when input constraints are violated, including type annotations.
+  You don't have to type-check your code, but in this package the annotations
+  document input requirements.
+* The ``str()`` and ``repr()`` forms of objects.
+* The ``omnidice.expressions`` module and ``tree`` parameters.
+* Anything explicitly described as provisional.
+
+Other than the last point these are all different kinds of undocumented
+behaviour.
+
+Backward-incompatible changes to undocumented behaviour may come with only
+a patch version bump. Backward-incompatible changes to provisional behaviour
+will come with at least a minor version bump, so you can depend on provisional
+behaviour by pinning to ``major.minor.*``.
+
+Dropping support for a Python version will come with an increased
+``python_requires`` constraint. So regardless of how you've pinned this
+package's version, you won't get a version that doesn't support your Python
+version.
+
+Removing support for a Python version is nevertheless considered a
+backward-incompatible change and therefore does bump the major version, unless
+that Python version has passed its
+`end of support <https://www.python.org/downloads/>`_. Dropping such obsolete
+versions is only a minor version bump.
+
+There is only one "release stream", and changes will not be backported to past
+major or minor releases.
 
 Compatibility
 =============
