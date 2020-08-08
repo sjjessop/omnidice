@@ -9,6 +9,7 @@
 
    dice
    drv
+   pools
    systems
 
 * :ref:`genindex`

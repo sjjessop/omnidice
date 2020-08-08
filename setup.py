@@ -11,7 +11,8 @@ setuptools.setup(
     ],
     extras_require={
         'dev': [
-            'coverage',
+            # https://github.com/pytest-dev/pytest/issues/7632
+            'coverage>=5.2.1',
             'flake8',
             'mypy>=0.782',
             'pytest-cov',
