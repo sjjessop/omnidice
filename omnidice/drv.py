@@ -1,6 +1,7 @@
 
 from bisect import bisect_left
 import collections
+import contextlib
 from fractions import Fraction
 from math import gcd, isclose
 from numbers import Real
@@ -176,9 +177,11 @@ class DRV(object):
             items = self._items()
         else:
             items = ((v, float(p)) for v, p in self._items())
+        with contextlib.suppress(TypeError):
+            items = sorted(items)
         return '\n'.join([
             'value\tprobability',
-            *(f'{v}\t{p}' for v, p in sorted(items)),
+            *(f'{v}\t{p}' for v, p in items),
         ])
     def faster(self) -> 'DRV':
         """
