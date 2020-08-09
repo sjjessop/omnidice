@@ -1,9 +1,8 @@
 
 from dataclasses import dataclass
-from fractions import Fraction
-from typing import Union
+from typing import Any, Callable, Union
 
-from ..dice import DRV, d, d10
+from ..dice import DRV, d10
 
 def standard(target: int) -> DRV:
     """
@@ -15,7 +14,11 @@ def standard(target: int) -> DRV:
     """
     return special(target, rerolls=0)
 
-def special(target: int, rerolls: int = 10) -> DRV:
+def special(
+    target: int,
+    rerolls: int = 10,
+    Value: Callable[[float], Any] = lambda x: x,
+) -> DRV:
     """
     If you have a specialty, then on the roll of a 10 you count a success and
     reroll that die. A 1 on the reroll does not count as a botch, and a 10 on
@@ -28,24 +31,34 @@ def special(target: int, rerolls: int = 10) -> DRV:
       too small to make any practical difference to a game, but you can
       increase the number of rerolls if you prefer. Set to ``0`` to get a
       standard roll with no specialty.
+    :param Value: The type to use for the possible values in the return DRV.
+      Must be constructible from float (not just int as you might expect), and
+      must support conversion to int and addition between objects of the type.
     """
     if target > 10:
         target = 10
     elif target < 2:
         target = 2
     def success(x):
-        return int(x >= target)
+        return Value(int(x >= target))
+    def result(x):
+        return Value(-1) if x == 1 else success(x)
     if rerolls == 0:
-        return d10.apply(lambda x: -1 if x == 1 else success(x))
-    first_roll = d(9).apply(lambda x: -1 if x == 1 else success(x))
+        return d10.apply(result)
     # Sneaky trick: by counting a 10 as more than 1 success, this means it's
     # the highest possible result, so explode() treats it as the only thing to
     # reroll. Then we round down the extra fractions at the end.
-    reroll = d10.apply(lambda x: 1 + 1e-9 if x == 10 else success(x))
-    return DRV.weighted_average((
-        (first_roll, Fraction(9, 10)),
-        (reroll.explode(rerolls - 1).apply(int) + 1, Fraction(1, 10)),
-    ))
+    def rounded(x):
+        return Value(int(x) + 1)
+    rerolled = (
+        d10.apply(lambda x: Value(1 + 1e-9) if x == 10 else success(x))
+        .explode(rerolls - 1)
+        .apply(rounded)
+    )
+    return d10.apply(
+        lambda x: rerolled if x == 10 else result(x),
+        allow_drv=True,
+    )
 
 @dataclass(frozen=True, order=True)
 class RevisedResult(object):
@@ -60,6 +73,11 @@ class RevisedResult(object):
     net_success: float
     #: Whether or not there were any success before cancellation by 1s.
     any_success: bool
+    def __init__(self, net_success: float, any_success: bool = None):
+        if any_success is None:
+            any_success = (net_success > 0)
+        object.__setattr__(self, 'net_success', net_success)
+        object.__setattr__(self, 'any_success', any_success)
     # Needed for +, @
     def __add__(self, other: 'RevisedResult') -> 'RevisedResult':
         return RevisedResult(
@@ -104,31 +122,7 @@ def revised_special(target: int, rerolls: int = 10) -> DRV:
       increase the number of rerolls if you prefer. Set to ``0`` to get a
       standard roll with no specialty.
     """
-    if target > 10:
-        target = 10
-    elif target < 2:
-        target = 2
-    def result(x: int, ignore_botch=False) -> RevisedResult:
-        if x == 1 and not ignore_botch:
-            return RevisedResult(-1, False)
-        if x < target:
-            return RevisedResult(0, False)
-        return RevisedResult(1, True)
-    if rerolls == 0:
-        return d10.apply(result)
-    first_roll = d(9).apply(result)
-    # Sneaky trick: by counting a 10 as more than 1 success, this means it's
-    # the highest possible result, so explode() treats it as the only thing to
-    # reroll. Then we round down the extra fractions at the end.
-    reroll = d10.apply(
-        lambda x: RevisedResult(1 + 1e-9, True) if x == 10 else result(x, True)
-    )
-    def rounded(x: RevisedResult) -> RevisedResult:
-        return RevisedResult(int(x.net_success) + 1, True)
-    return DRV.weighted_average((
-        (first_roll, Fraction(9, 10)),
-        (reroll.explode(rerolls - 1).apply(rounded), Fraction(1, 10)),
-    ))
+    return special(target, rerolls=rerolls, Value=RevisedResult)
 
 def total(score: Union[int, RevisedResult]) -> int:
     """
