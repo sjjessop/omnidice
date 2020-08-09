@@ -92,7 +92,12 @@ class DRV(object):
       this is used only for the string representation, but might in future
       help support lazily-evaluated DRVs.
     """
-    def __init__(self, distribution: 'DictData', tree: ExpressionTree = None):
+    def __init__(
+        self,
+        distribution: 'DictData',
+        *,
+        tree: ExpressionTree = None,
+    ):
         self.__dist = MappingProxyType(dict(distribution))
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
@@ -201,7 +206,7 @@ class DRV(object):
         This is used for example when some optimisation has computed a DRV one
         way, but we want to represent it the original way.
         """
-        return DRV(self.__dist, tree)
+        return DRV(self.__dist, tree=tree)
     @property
     def cdf(self):
         if self.__cdf is None:
@@ -562,8 +567,8 @@ class DRV(object):
     def apply(
         self,
         func: Callable[[Any], Any],
-        tree: ExpressionTree = None,
         *,
+        tree: ExpressionTree = None,
         allow_drv: bool = False,
     ) -> 'DRV':
         """
@@ -632,6 +637,7 @@ class DRV(object):
     @staticmethod
     def weighted_average(
         iterable: Iterable[Tuple['DRV', 'Probability']],
+        *,
         tree: ExpressionTree = None,
     ) -> 'DRV':
         """
