@@ -75,6 +75,15 @@ def test_bad_probabilities():
     # They don't have to add up to exactly 1, though
     DRV({1: 0.333, 2: 0.333, 3: 0.333})
 
+def test_apply():
+    """
+    For calculations not supported by operator overloading, you can use the
+    apply() function to re-map the generated values. It can be a many-to-one
+    mapping, and can return a DRV.
+    """
+    d6 = DRV({x: 1 / 6 for x in range(1, 7)})
+    assert d6.apply(lambda x: x @ d6, allow_drv=True).is_close(d6 @ d6)
+
 def test_convolve():
     """
     There is an optimisation which uses numpy.convolve for large additions.

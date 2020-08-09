@@ -559,9 +559,13 @@ class DRV(object):
             yield (reroll_value * (idx + 1), reroll_prob ** (idx + 1))
         postfix = '.explode()' if rerolls == 50 else f'.explode({rerolls!r})'
         return self._reduced(iter_pairs(), tree=self._combine_post(postfix))
-    def apply(self,
-              func: Callable[[Any], Any],
-              tree: ExpressionTree = None) -> 'DRV':
+    def apply(
+        self,
+        func: Callable[[Any], Any],
+        tree: ExpressionTree = None,
+        *,
+        allow_drv: bool = False,
+    ) -> 'DRV':
         """
         Apply a unary function to the values produced by this DRV. If `func` is
         an injective (one-to-one) function, then the probabilities are
@@ -573,8 +577,15 @@ class DRV(object):
         :param tree: the expression from which this object was defined. If
           ``None``, the result DRV is represented by listing out all the values
           and probabilities.
+        :param allow_drv: If True, then when `func` returns a DRV, the possible
+          values of that DRV are each included in the returned DRV. Recall that
+          a DRV cannot be a possible value of the returned DRV, because it is
+          not hashable. So, without this option `func` cannot return a DRV.
+
+        .. versionchanged:: 1.1
+            Added ``allow_drv`` option.
         """
-        return DRV._reduced(self._items(), func, tree=tree)
+        return DRV._reduced(self._items(), func, tree=tree, drv=allow_drv)
     def _apply2(self, func, right, connective=None) -> 'DRV':
         """Apply a binary function, with the values of this DRV on the left."""
         expr_tree = self._combine(self, right, connective)
@@ -603,10 +614,20 @@ class DRV(object):
             for (rvalue, rprob) in right._items():
                 yield ((lvalue, rvalue), lprob * rprob)
     @staticmethod
-    def _reduced(iterable, func=lambda x: x, tree=None) -> 'DRV':
+    def _reduced(iterable, func=lambda x: x, tree=None, drv=False) -> 'DRV':
         distribution: dict = collections.defaultdict(int)
-        for value, prob in iterable:
-            distribution[func(value)] += prob
+        if not drv:
+            # Optimisation does make a difference to e.g. test_convolve
+            for value, prob in iterable:
+                distribution[func(value)] += prob
+        else:
+            for value, prob in iterable:
+                transformed = func(value)
+                if isinstance(transformed, DRV):
+                    for value2, prob2 in transformed._weighted_items(prob):
+                        distribution[value2] += prob2
+                else:
+                    distribution[transformed] += prob
         return DRV(distribution, tree=tree)
     @staticmethod
     def weighted_average(
