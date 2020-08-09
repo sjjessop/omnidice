@@ -1,12 +1,13 @@
 
 from fractions import Fraction
 import itertools
+from math import sqrt
 from unittest.mock import Mock, patch
 
 import pytest
 
 from omnidice import drv
-from omnidice.drv import DRV
+from omnidice.drv import DRV, p
 from omnidice.expressions import Atom
 
 def test_sample():
@@ -230,3 +231,19 @@ def test_weighted():
     ))
     # So, var2 should be uniformly distributed
     assert var2.is_same(DRV({x: 0.25 for x in range(1, 5)}))
+
+def test_given():
+    """
+    Conditional probability distribution, given that some predicate is true.
+    """
+    var = DRV({x: 0.125 for x in range(8)})
+    var_odd = var.given(lambda x: x % 2 != 0)
+    var_even = var.given(lambda x: x % 2 == 0)
+    assert p(var_odd == 2) == 0
+    assert p(var_odd == 1) == 0.25
+    assert p(var_even == 2) == 0.25
+    assert p(var_even == 1) == 0
+    var_square = var.given(lambda x: int(sqrt(x)) ** 2 == x)
+    assert p(var_square == 0) == pytest.approx(1/3)
+    with pytest.raises(ZeroDivisionError):
+        var.given(lambda x: x == 8)

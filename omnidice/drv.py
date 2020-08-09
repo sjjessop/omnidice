@@ -642,9 +642,37 @@ class DRV(object):
             for drv, weight in iterable:
                 yield from drv._weighted_items(weight)
         return DRV._reduced(iter_pairs(), tree=tree)
-    def _weighted_items(self, weight):
+    def _weighted_items(self, weight, pred=lambda x: True):
         for value, prob in self.__dist.items():
-            yield value, prob * weight
+            if pred(value):
+                yield value, prob * weight
+    def given(self, predicate: Callable[[Any], bool]) -> 'DRV':
+        """
+        Return the conditional probability distribution of this DRV, restricted
+        to the possible values for which `predicate` is true.
+
+        For example, :code:`drv.given(lambda x: True)` is the same distribution
+        as :code:`drv`, and the following are equivalent to each other::
+
+            d6.given(lambda x: bool(x % 2))
+            DRV({1: Fraction(1, 3), 3: Fraction(1, 3), 5: Fraction(1, 3)})
+
+        If `x` is a DRV, and `A` and `B` are predicates, then the conditional
+        probability of `A` given `B`, written in probability theory as
+        ``p(A(x) | B(x))``, can be computed as :code:`p(x.given(B).apply(A)))`.
+
+        :param predicate: Called with possible values of `self`, and must
+          return :obj:`bool` (not just truthy).
+        :raises ZeroDivisionError: if the probability of `predicate` being
+          true is 0.
+
+        .. versionadded:: 1.1
+        """
+        total = p(self.apply(predicate))
+        if total == 0:
+            # Would be raised anyway, but nicer error message
+            raise ZeroDivisionError('predicate is True with probability 0')
+        return DRV(self._weighted_items(1 / total, predicate))
     @staticmethod
     def _combine(*args):
         """
