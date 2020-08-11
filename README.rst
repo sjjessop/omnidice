@@ -306,3 +306,33 @@ Omnidice does not work with Python versions 3.6 or lower, because it uses the
 
 It should work with pretty much any versions of its optional dependencies,
 ``numpy`` and ``pandas``.
+
+Changelog
+=========
+
+Version 1.1.0
+-------------
+
+* Started adding code for specific game systems.
+* Dice pools, which are DRVs whose possible values are the different
+  combinations rolled on multiple dice.
+* New features of DRV:
+   * The function passed to apply() can return a DRV.
+   * Method given() returns conditional probability distribution.
+   * Method weighted_average() combines DRVs.
+* Provide a fixed URL for the latest wheel of a major version.
+* Detailed versioning policy: definition of backward-compatible.
+
+Bugfixes
+~~~~~~~~
+
+* to_table() now works even if the values of the DRV aren't sortable.
+* Removed hacky use of TypeVar in DRV type annotations.
+* The values on the right-hand side of ``@`` no longer need to be numeric,
+  they just need to implement ``+``.
+
+Backward-incompatible
+~~~~~~~~~~~~~~~~~~~~~
+
+* Changed `tree` to a keyword-only argument in DRV methods. It was not intended
+  for public use (yet), since its type is an undocumented class.
