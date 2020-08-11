@@ -3,7 +3,7 @@ from os.path import basename
 from sys import argv, modules
 import typing
 
-__version__ = '1.0.0'
+__version__ = '1.1.0'
 
 # Patch for Sphinx only. The module that originally needs this is omnidice.drv,
 # but of course once the patch is applied it sticks, even if only imported
