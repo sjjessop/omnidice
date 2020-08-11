@@ -38,6 +38,19 @@ the difficulty):
     # Distribution for 6 dice, difficulty 8 (as total successes)
     (6 @ diff(8)).apply(total)
 
+~~~~
+
+Over the Edge (Atlas Games, Jonathan Tweet, Robin D. Laws)
+----------------------------------------------------------
+
+.. automodule:: omnidice.systems.over_the_edge
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+   :special-members: __iter__
+
+~~~~
+
 Storyteller (White Wolf, Mark Rein-Hagen, Tom Dowd)
 ---------------------------------------------------
 
