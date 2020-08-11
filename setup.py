@@ -4,9 +4,10 @@ import setuptools
 setuptools.setup(
     name='omnidice',
     version='1.1.0',
-    python_requires='>=3.7.3',
+    python_requires='>=3.6.8',
     packages=setuptools.find_packages(),
     install_requires=[
+        'dataclasses;python_version<"3.7"',
         'pytest',
     ],
     extras_require={
