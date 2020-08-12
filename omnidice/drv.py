@@ -545,8 +545,9 @@ class DRV(object):
         roll again and add the new result to the original.
 
         Because DRV represents only finitely-many possible values, whereas the
-        process of rerolling can (with minuscule probability) carry on forever,
-        this method imposes an arbitary limit to the number of rerolls.
+        process of rerolling can (with minuscule probability) carry on
+        indefinitely, this method imposes an arbitary limit to the number of
+        rerolls.
 
         :param rerolls: The maximum number of rerolls. Set this to 1 for a die
           that can only "explode" once, not indefinitely.
