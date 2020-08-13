@@ -33,11 +33,15 @@ jobs:
       - name: Test without Pandas
         run: pytest --cov=omnidice --cov-branch --cov-report=term
 
-      - name: Test with Pandas
+      - name: Install Pandas
         run: |
           pip install pandas
           pip freeze
-          pytest --cov=omnidice --cov-branch --cov-append --cov-report=xml --cov-report=term
+
+      - name: Test with Pandas
+        env:
+          OMNIDICE_TST_ORE_SIZE_LIMIT: 10
+        run: pytest --cov=omnidice --cov-branch --cov-append --cov-report=xml --cov-report=term
 
       - name: Build wheel
         run: python setup.py bdist_wheel

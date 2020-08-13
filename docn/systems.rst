@@ -40,6 +40,17 @@ the difficulty):
 
 ~~~~
 
+One Roll Engine (Pagan Publishing, Dennis Detwiller, Greg Stolze)
+-----------------------------------------------------------------
+
+.. automodule:: omnidice.systems.one_roll_engine
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+
+~~~~
+
 Over the Edge (Atlas Games, Jonathan Tweet, Robin D. Laws)
 ----------------------------------------------------------
 
