@@ -112,17 +112,17 @@ def pool(
 @dataclass(frozen=True)
 class Unstoppable:
     """
-    Compute the total of a roll and also report whether or not it is
-    unstoppable.
+    Compute the total of a roll and also report whether or not it includes an
+    "unstoppable six".
 
-    The rules in the 2nd edition book are not explicit on this, but a 6 which
-    is dropped due to a penalty die is *not* considered to trigger the
-    Unstoppable Six rule. This matches the example given for botches (where a
-    dropped non-1 doesn't prevent a botch) and it makes sense that a penalty
-    die shouldn't *increase* your chance of unstoppability.
+    The 2nd edition book is not explicit, but a 6 which is dropped due to a
+    penalty die does *not* trigger the Unstoppable Six rule. This matches the
+    example given for botches (where a dropped non-1 doesn't prevent a botch)
+    and it makes sense that a penalty die shouldn't *increase* your chance of
+    unstoppability.
 
-    This is intended to be used as ``pool(...).apply(Unstoppable)``. If you
-    specify ``unstoppable=True`` then you don't need to apply it too.
+    This can be used as ``pool(...).apply(Unstoppable)``, but if you specify
+    ``unstoppable=True`` then you don't need to apply it as well.
     """
     #: Total on the dice.
     total: int
