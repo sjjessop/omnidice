@@ -1,6 +1,8 @@
 """
-These dice mechanics are from 2nd Edition. I don't have access to a copy of 1st
-or 3rd Edition, so if they're different then you're on your own!
+These dice mechanics are from 2nd Edition, also known as the Wanton
+Role-Playing System (WaRP). I don't have access to a copy of 1st Edition
+(although I believe the mechanics are similar/identical) or 3rd Edition (which
+is different).
 
 The basic mechanic is to roll a number of d6 equal to your trait and add up the
 numbers. A "bonus die" means you roll one extra die but discard the lowest. A
@@ -87,9 +89,9 @@ def pool(
       default max number of rerolls. The additional exploding die is listed as
       a single extra die, regardless of how many 6s it rolls, so it can have a
       value greater than 6.
-    :param unstoppable: If True, use the "Unstoppable Six" rule. Instead of
-      showing all the dice results, the possible values of the drv returned are
-      instances of :obj:`Unstoppable`.
+    :param unstoppable: If True, use the "Unstoppable Six" optional rule.
+      Instead of showing all the dice results, the possible values of the drv
+      returned are instances of :obj:`Unstoppable`.
     """
     if dice == 0:
         raise ValueError('empty pool is not allowed')

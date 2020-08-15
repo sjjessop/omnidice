@@ -13,8 +13,9 @@ mechanics work are paraphrased from the game materials or other sources, so
 they are Not Official.
 
 The game mechanics are only described far enough to make clear what mechanic
-and version we're talking about. You probably can't learn the mechanics for an
-unfamiliar game from this documentation.
+and version we're talking about, and to state what the code is doing. You
+probably can't learn the mechanics for an unfamiliar game from this
+documentation.
 
 Usage
 -----
