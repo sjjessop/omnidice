@@ -49,6 +49,8 @@ One Roll Engine (Pagan Publishing, Dennis Detwiller, Greg Stolze)
    :members:
    :member-order: bysource
 
+   Module contents
+   ~~~~~~~~~~~~~~~
 
 ~~~~
 

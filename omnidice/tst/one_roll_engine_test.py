@@ -7,6 +7,7 @@ import pytest
 
 from omnidice.dice import d, d10
 from omnidice.drv import DRV, p
+from omnidice.pools import PlainResult, keep_lowest
 from omnidice.pools import pool as Pool
 from omnidice.systems import one_roll_engine as ore
 
@@ -29,7 +30,7 @@ expected_counts = {
 }
 
 @pytest.mark.parametrize('dice, count', expected_counts.items())
-def test_pool(dice, count):
+def test_matches(dice, count):
     """
     Check that we have the right number of values in each distribution.
     """
@@ -155,3 +156,85 @@ def test_belle_curve():
         result = p(ore.matches(10).apply(len) > 0)
         assert 0.9985 <= result
         assert 1 - result == Fraction(combinations(10), 10**10)
+
+def test_wiggle():
+    """
+    Wiggle dice have the potential to be difficult to implement. The
+    documentation lays out what's available to handle them.
+    """
+    # First example of 'wd' param.
+    drv = ore.matches(3, wd=lambda x: PlainResult(max(x), max(x)))
+    assert drv.is_same(
+        Pool(d10, count=3)
+        .apply(lambda x: x + PlainResult(max(x), max(x)))
+        .apply(ore.Match.get_matches)
+    )
+    assert p(drv.apply(lambda x: ore.Match(5, 10) in x)) == Fraction(1, 1000)
+    # Second example of 'wd' param
+    drv = ore.matches(3, wd=lambda x, y=PlainResult(10, 9): y)
+    assert drv.is_same(
+        Pool(d10, count=3)
+        .apply(lambda x: x + PlainResult(10, 9))
+        .apply(ore.Match.get_matches)
+    )
+    assert p(drv.apply(lambda x: ore.Match(4, 10) in x)) == Fraction(1, 1000)
+
+def test_pool_examples():
+    """
+    Check the examples of using pool() do vaguely work.
+    """
+    # First example of penalty die
+    def penalty(result):
+        return PlainResult(*(tuple(result)[1:]))
+
+    penalised = ore.pool(1).apply(penalty).apply(ore.Match.get_matches)
+    assert penalised.is_same(DRV({(): 1}))
+    penalised = ore.pool(2).apply(penalty).apply(
+        ore.Match.get_matches_or_highest
+    )
+    assert penalised.apply(len).is_same(DRV({1: 1}))
+    assert penalised.apply(lambda x: x[0]).is_same(
+        keep_lowest(1, d10, count=2)
+        .apply(lambda x: ore.Match(1, next(iter(x))))
+    )
+    # Second example of penalty die
+    def penalty(result):
+        matches = sorted(
+            ore.Match.get_all_sets(result),
+            key=lambda x: (x.width, x.height),
+        )
+        matches[0] = ore.Match(matches[0].width - 1, matches[0].height)
+        return PlainResult(*(
+            die
+            for match in matches
+            for die in [match.height] * match.width
+        ))
+    penalised = ore.pool(1).apply(penalty).apply(ore.Match.get_matches)
+    assert penalised.is_same(DRV({(): 1}))
+    penalised = ore.pool(3).apply(penalty).apply(ore.Match.get_matches)
+    # Discarding from the narrowest match of 3 dice doesn't affect your chance
+    # of success! Width 3 becomes width 2, and width 2 means there's an
+    # unmatched third die to discard.
+    assert p(penalised.apply(len) > 0) == p(ore.matches(3).apply(len) > 0)
+
+def test_pool_params():
+    """Although not used in the examples, test the parameters."""
+    assert ore.pool(1, hd=1).apply(ore.Match.get_matches).is_same(
+        ore.matches(1, hd=1)
+    )
+    drv = ore.pool(2, difficulty=8).apply(ore.Match.get_matches)
+    assert drv.is_same(DRV({
+        (): Fraction(97, 100),
+        (ore.Match(2, 8),): Fraction(1, 100),
+        (ore.Match(2, 9),): Fraction(1, 100),
+        (ore.Match(2, 10),): Fraction(1, 100),
+    }))
+    drv = ore.pool(2, hd=1, difficulty=8).apply(ore.Match.get_matches)
+    assert drv.is_same(DRV({
+        (): Fraction(79, 100),
+        (ore.Match(2, 8),): Fraction(1, 100),
+        (ore.Match(2, 9),): Fraction(1, 100),
+        (ore.Match(3, 10),): Fraction(1, 100),
+        # 18 ways to roll a 10 plus something that isn't a 10
+        (ore.Match(2, 10),): Fraction(18, 100),
+    }))
