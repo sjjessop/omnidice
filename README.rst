@@ -310,8 +310,21 @@ It should work with pretty much any versions of its optional dependencies,
 Changelog
 =========
 
+Version 1.2.0
+-------------
+
+Features
+~~~~~~~~
+
+* Add Python 3.6 support, and corresponding test build.
+* One Roll Engine.
+* Open D6.
+
 Version 1.1.0
 -------------
+
+Features
+~~~~~~~~
 
 * Started adding code for specific game systems.
 * Dice pools, which are DRVs whose possible values are the different
