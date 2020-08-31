@@ -54,6 +54,17 @@ One Roll Engine (Pagan Publishing, Dennis Detwiller, Greg Stolze)
 
 ~~~~
 
+OpenD6 (West End Games)
+-----------------------
+
+.. automodule:: omnidice.systems.opend6
+   :show-inheritance:
+   :members:
+   :member-order: bysource
+
+~~~~
+
+
 Over the Edge (Atlas Games, Jonathan Tweet, Robin D. Laws)
 ----------------------------------------------------------
 
