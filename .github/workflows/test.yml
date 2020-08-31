@@ -47,7 +47,7 @@ jobs:
         run: python setup.py bdist_wheel
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1.0.7
+        uses: codecov/codecov-action@v1
         with:
           file: ./coverage.xml
           env_vars: OS,PYTHON
