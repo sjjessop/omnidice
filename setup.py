@@ -3,7 +3,7 @@ import setuptools
 
 setuptools.setup(
     name='omnidice',
-    version='1.1.0',
+    version='1.2.0',
     python_requires='>=3.6.8',
     packages=setuptools.find_packages(),
     install_requires=[
