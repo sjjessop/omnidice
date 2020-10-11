@@ -136,6 +136,14 @@ from typing import Any, Callable, Iterable, Iterator, Tuple, Type, TypeVar
 from omnidice.drv import DRV
 
 T = TypeVar('T')
+# This used to be OK as just T, but it stopped working between mypy 0.782 and
+# 0.790. Maybe to do with https://github.com/python/typeshed/pull/4192 or
+# something like it.
+class LTComparable(ABC):
+    @abstractmethod
+    def __lt__(self, other: 'LTComparable') -> bool:
+        raise NotImplementedError
+CT = TypeVar('CT', bound=LTComparable)
 RT = TypeVar('RT', bound='Result')
 
 class Result(ABC, abc.Iterable):
@@ -220,7 +228,7 @@ class PlainResult(Result):
     def values(self) -> Tuple:
         """The values on the dice, in normalized form."""
         return self._values
-    def normalize(self, values: Tuple[T, ...]) -> Iterable[T]:
+    def normalize(self, values: Tuple[CT, ...]) -> Iterable[CT]:
         """
         Erase insignificant differences between possible values. Called by the
         constructor.
