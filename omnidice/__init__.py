@@ -18,13 +18,13 @@ if using_sphinx:  # pragma: no cover
     # https://github.com/sphinx-doc/sphinx/issues/6518
     _original = typing.get_type_hints
 
-    def hacked_hints(obj, globalns=None, localns=None):
+    def hacked_hints(obj, globalns=None, localns=None, *args, **kwargs):
         if localns is None:
             localns = {}
         # Suppress expansion of these type aliases, whenever used as strings in
         # annotations or with "from __future__ import annotations".
         localns['Probability'] = typing.ForwardRef('Probability')
         localns['DictData'] = typing.ForwardRef('DictData')
-        return _original(obj, globalns, localns)
+        return _original(obj, globalns, localns, *args, **kwargs)
 
     typing.get_type_hints = hacked_hints
