@@ -13,7 +13,7 @@ variables. `Current release documentation <https://omnidice.readthedocs.io/>`_.
    :alt: Test status
    :target: https://github.com/sjjessop/omnidice/actions?query=workflow%3Atests
 
-.. image:: https://codecov.io/gh/sjjessop/omnidice/branch/master/graph/badge.svg
+.. image:: https://codecov.io/gh/sjjessop/omnidice/branch/develop/graph/badge.svg
    :alt: codecov
    :target: https://codecov.io/gh/sjjessop/omnidice
 
@@ -151,7 +151,7 @@ When running the tests you might see a warning:
 but I can't get to the bottom of why it happens at all for me, even when
 everything was installed via Anaconda.
 
-If you want the latest (unreleased) code, then use the ``master`` branch.
+If you want the latest (unreleased) code, then use the ``develop`` branch.
 
 If you know what you're doing then of course you are free to install by
 ``python setup.py``, or ``pip install -e .``, or by building a wheel file
