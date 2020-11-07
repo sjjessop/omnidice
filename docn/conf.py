@@ -49,6 +49,11 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
+autodoc_type_aliases = {
+    'DictData': 'omnidice.drv.DictData',
+    'Probability': 'omnidice.drv.Probability',
+}
+
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'numpy': ('https://numpy.org/doc/stable/', None),

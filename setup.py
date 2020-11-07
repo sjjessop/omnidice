@@ -18,7 +18,7 @@ setuptools.setup(
             'mypy>=0.782',
             'pytest-cov',
             'Pygments>=2.6.1',
-            'sphinx>=3.1.2,<3.3',
+            'sphinx>=3.3.0',
             'wheel',
         ],
         'pd': ['pandas'],
