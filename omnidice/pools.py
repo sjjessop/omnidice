@@ -264,6 +264,9 @@ class PlainResult(Result):
 
         That should result in a reasonably efficient calculation, although
         it wouldn't benefit from the :obj:`numpy.convolve` optimisation in DRV.
+
+        .. versionchanged:: 1.2.1
+            Fixed signature to reflect that values must be comparable.
         """
         return tuple(sorted(values, reverse=True))
     # Allow polymorphic comparisons. This is mainly useful for .is_same()

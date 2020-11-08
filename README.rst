@@ -310,6 +310,26 @@ It should work with pretty much any versions of its optional dependencies,
 Changelog
 =========
 
+Version 1.2.1
+-------------
+
+Features
+~~~~~~~~
+
+No changes to API, but:
+
+* Python 3.9 is now supported, and added to the test matrix.
+* Main development branch is now called `develop`.
+* Removed a documentation hack, and instead use the new `autodoc_type_aliases`
+  Sphinx config option.
+
+Bugfixes
+~~~~~~~~
+
+* Tighten up a function signature caught by a recent version of mypy: to call
+  `sorted()` on a sequence we now need to declare its elements comparable as
+  well as them actually being comparable at runtime.
+
 Version 1.2.0
 -------------
 
