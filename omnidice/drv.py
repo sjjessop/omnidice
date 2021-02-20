@@ -151,10 +151,7 @@ class DRV(object):
         """
         Return a dictionary mapping all possible values to probabilities.
         """
-        # dict(self.__dist) is type-correct, but about 3 times slower.
-        # Unfortunately there's no way to parameterise MappingProxyType to
-        # say what the type is of the underlying mapping that gets copied.
-        return self.__dist.copy()  # type: ignore
+        return self.__dist.copy()
     def to_pd(self):
         """
         Return a :class:`pandas.Series` mapping values to probabilities. The
