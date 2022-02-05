@@ -310,6 +310,22 @@ It should work with pretty much any versions of its optional dependencies,
 Changelog
 =========
 
+Version 1.2.2
+-------------
+
+Features
+~~~~~~~~
+
+No changes to API, but:
+
+* Python 3.10 is now supported, and added to the test matrix.
+
+Bugfixes
+~~~~~~~~
+
+* Support mypy 0.931
+
+
 Version 1.2.1
 -------------
 
