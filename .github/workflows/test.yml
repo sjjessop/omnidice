@@ -26,7 +26,7 @@ jobs:
           pip install -e .[dev]
           pip freeze
 
-      - name: Lint
+      - name: Lint without Pandas
         run: |
           flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
           mypy -p omnidice
@@ -38,6 +38,11 @@ jobs:
         run: |
           pip install pandas
           pip freeze
+
+      - name: Lint with Pandas
+        run: |
+          flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
+          mypy -p omnidice
 
       - name: Test with Pandas
         env:

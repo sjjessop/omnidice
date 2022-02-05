@@ -17,8 +17,9 @@ from .expressions import (
 
 try:
     import numpy as np
+    use_numpy = True
 except ModuleNotFoundError:
-    np = None
+    use_numpy = False
 
 CONVOLVE_OPTIMISATION = True
 CONVOLVE_SIZE_LIMIT = 1000
@@ -268,7 +269,7 @@ class DRV(object):
         does not occur).
         """
         while CONVOLVE_OPTIMISATION:
-            if np is None:
+            if not use_numpy:
                 break
             if not isinstance(right, DRV):
                 break
