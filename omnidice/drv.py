@@ -3,13 +3,14 @@ from bisect import bisect_left
 import collections
 import contextlib
 from fractions import Fraction
+import functools
 from math import gcd, isclose
 from numbers import Real
 import operator
 import os
 from random import Random
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Iterable, Mapping, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, Mapping, Tuple, Union
 
 from .expressions import (
     Atom, AttrExpression, BinaryExpression, ExpressionTree, UnaryExpression,
@@ -342,27 +343,21 @@ class DRV(object):
         `left` times, and adding the results together.
         """
         if not isinstance(left, int):
-            return NotImplemented
-        if left <= 0:
-            raise ValueError(left)
+            return NotImplemented  # type: ignore[unreachable]
         # Exponentiation by squaring. This isn't massively faster, but does
         # help a bit for hundreds of dice.
-        result = None
-        so_far = self
-        original = left
-        while True:
-            if left % 2 == 1:
-                if result is None:
-                    result = so_far
-                else:
-                    result += so_far
-            left //= 2
-            if left == 0:
-                break
-            so_far += so_far
-        # left was non-zero, so result cannot still be None
-        result = cast(DRV, result)
-        return result.replace_tree(self._combine(original, self, '@'))
+        def parts(base: DRV, exponent: int) -> Iterable[DRV]:
+            if exponent < 1:
+                raise ValueError(exponent)
+            while True:
+                if exponent % 2 == 1:
+                    yield base
+                exponent //= 2
+                if exponent == 0:
+                    break
+                base += base
+        result = functools.reduce(operator.add, parts(self, left))
+        return result.replace_tree(self._combine(left, self, '@'))
     def __matmul__(self, right: 'DRV') -> 'DRV':
         """
         Handler for :code:`self @ right`.
@@ -373,7 +368,7 @@ class DRV(object):
         All possible values of this variable must be of type :obj:`int`.
         """
         if not isinstance(right, DRV):
-            return NotImplemented
+            return NotImplemented  # type: ignore[unreachable]
         if not all(isinstance(value, int) for value in self.__dist):
             raise TypeError('require integers on LHS of @')
         def iter_drvs():
