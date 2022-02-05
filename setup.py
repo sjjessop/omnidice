@@ -14,6 +14,7 @@ setuptools.setup(
             # https://github.com/pytest-dev/pytest/issues/7632
             'coverage>=5.2.1',
             'flake8',
+            'isort',
             'mypy>=0.812',
             'pytest-cov',
             'Pygments>=2.6.1',

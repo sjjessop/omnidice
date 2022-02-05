@@ -28,6 +28,7 @@ jobs:
 
       - name: Lint without Pandas
         run: |
+          isort . -m VERTICAL_GRID_GROUPED --force-sort-within-sections --trailing-comma --lines-after-imports=1 --check-only
           flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
           mypy -p omnidice
 
@@ -41,6 +42,7 @@ jobs:
 
       - name: Lint with Pandas
         run: |
+          isort . -m VERTICAL_GRID_GROUPED --force-sort-within-sections --trailing-comma --lines-after-imports=1 --check-only
           flake8 --show-source --ignore=E226,E301,E302,E305,E306,E501,W503,W504
           mypy -p omnidice
 
