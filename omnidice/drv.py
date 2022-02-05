@@ -294,7 +294,7 @@ class DRV(object):
                 min(self_values) + min(right_values),
                 max(self_values) + max(right_values) + 1,
             )
-            filtered = (final_probs > 0)
+            filtered: np.ndarray = (final_probs > 0)
             values = np.array(values)[filtered].tolist()
             final_probs = final_probs[filtered]
             return DRV(

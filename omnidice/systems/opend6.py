@@ -19,7 +19,8 @@ just increase the dice and pips accordingly.
 from dataclasses import dataclass, replace
 from typing import Union
 
-from omnidice.dice import DRV, d6
+from omnidice.dice import d6
+from omnidice.drv import DRV
 from omnidice.expressions import Atom
 
 @dataclass(frozen=True)

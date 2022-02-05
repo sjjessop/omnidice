@@ -2,7 +2,8 @@
 from dataclasses import dataclass
 from typing import Any, Callable, Union
 
-from ..dice import DRV, d10
+from omnidice.dice import d10
+from omnidice.drv import DRV
 
 def standard(target: int) -> DRV:
     """
