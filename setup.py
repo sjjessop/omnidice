@@ -8,6 +8,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         'dataclasses;python_version<"3.7"',
+        'types-dataclasses;python_version<"3.7"',
         'pytest',
     ],
     extras_require={
