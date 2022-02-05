@@ -133,9 +133,9 @@ class Match(object):
         The warning about result ordering in :func:`get_matches` applies.
         """
         if diff > 1:
-            goodresult = filter(lambda x: x >= diff, result)
+            goodresult: Iterable[int] = filter(lambda x: x >= diff, result)
         else:
-            goodresult = iter(result)
+            goodresult = result
         return (
             cls.get_matches(goodresult)
             or (cls(width=1, height=max(result)),)
