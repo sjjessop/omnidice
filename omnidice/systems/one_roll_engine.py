@@ -89,7 +89,7 @@ class Match(object):
     def __repr__(self):
         return f'{self.width}x{self.height}'
     @classmethod
-    def from_group(cls, value: int, items: Iterable[int]):
+    def from_group(cls, value: int, items: Iterable[int]) -> 'Match':
         """
         Return a Match object from a group yielded by
         :func:`itertools.groupby`.

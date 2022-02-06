@@ -10,7 +10,9 @@ import operator
 import os
 from random import Random
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Iterable, Mapping, Tuple, Union
+from typing import (
+    Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Union,
+)
 
 from .expressions import (
     Atom, AttrExpression, BinaryExpression, ExpressionTree, UnaryExpression,
@@ -38,6 +40,8 @@ rng = Random(os.urandom(10))
 #: needed because mypy doesn't know that :obj:`float` implements
 #: :obj:`Real <numbers.Real>`. See https://github.com/python/mypy/issues/3186
 Probability = Union[Real, float]
+
+DataPairs = Iterable[Tuple[Any, Probability]]
 
 #: Type alias for a parameter used to create a probability dictionary.
 DictData = Union[Mapping[Any, Probability], Iterable[Tuple[Any, Probability]]]
@@ -110,7 +114,7 @@ class DRV(object):
         self.__expr_tree = tree
         # Computed probabilities can hit 0 due to float underflow, but maybe
         # we should strip out anything with probability 0.
-        if not all(0 <= prob <= 1 for value, prob in self._items()):
+        if not all(0 <= prob <= 1 for value, prob in self._items()):  # type: ignore[operator] # Real is underspecified
             raise ValueError('Probability not in range')
     def __repr__(self):
         if self.__expr_tree is not None:
@@ -127,7 +131,10 @@ class DRV(object):
         if values != othervalues:
             return False
         return all(self.__dist[val] == other.__dist[val] for val in values)
-    def is_close(self, other: 'DRV', *, rel_tol=None, abs_tol=None) -> bool:
+    def is_close(
+        self, other: 'DRV', *,
+        rel_tol: float = None, abs_tol: float = None,
+    ) -> bool:
         """
         Return True if `self` and `other` have approximately the same discrete
         probability distribution, within the specified tolerances. Possible
@@ -149,7 +156,7 @@ class DRV(object):
             isclose(self.__dist[val], other.__dist[val], **kwargs)
             for val in values
         )
-    def to_dict(self) -> Dict[Any, 'Probability']:
+    def to_dict(self) -> Dict[Any, Probability]:
         """
         Return a dictionary mapping all possible values to probabilities.
         """
@@ -195,9 +202,9 @@ class DRV(object):
             {x: float(y) for x, y in self._items()},
             tree=self._combine_post('.faster()'),
         )
-    def _items(self):
+    def _items(self) -> DataPairs:
         return self.__dist.items()
-    def replace_tree(self, tree: ExpressionTree) -> 'DRV':
+    def replace_tree(self, tree: Optional[ExpressionTree]) -> 'DRV':
         """
         Return a new DRV with the same distribution as this DRV, but defined
         from the specified expression.
@@ -232,7 +239,7 @@ class DRV(object):
                 result = lcm(prob.denominator, result)
             self.__lcm = result
         return self.__lcm
-    def sample(self, random: Random = rng):
+    def sample(self, random: Random = rng) -> Any:
         """
         Sample this variable.
 
@@ -257,7 +264,7 @@ class DRV(object):
         if self.__intvalued is None:
             self.__intvalued = all(isinstance(x, int) for x in self.__dist)
         return self.__intvalued
-    def __add__(self, right) -> 'DRV':
+    def __add__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self + right`.
 
@@ -279,7 +286,7 @@ class DRV(object):
                 break
             if not self._intvalued or not right._intvalued:
                 break
-            def get_range(dist):
+            def get_range(dist: Iterable[int]) -> range:
                 return range(min(dist), max(dist) + 1)
             self_values = get_range(self.__dist)
             right_values = get_range(right.__dist)
@@ -302,7 +309,7 @@ class DRV(object):
                 tree=self._combine(self, right, '+'),
             )
         return self._apply2(operator.add, right, connective='+')
-    def __sub__(self, right) -> 'DRV':
+    def __sub__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self - right`.
 
@@ -371,7 +378,7 @@ class DRV(object):
             return NotImplemented  # type: ignore[unreachable]
         if not all(isinstance(value, int) for value in self.__dist):
             raise TypeError('require integers on LHS of @')
-        def iter_drvs():
+        def iter_drvs() -> Iterable[Tuple[DRV, Probability]]:
             so_far = min(self.__dist) @ right
             for num_dice in range(min(self.__dist), max(self.__dist) + 1):
                 if num_dice in self.__dist:
@@ -381,7 +388,7 @@ class DRV(object):
             iter_drvs(),
             tree=self._combine(self, right, '@'),
         )
-    def __truediv__(self, right) -> 'DRV':
+    def __truediv__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self / right`.
 
@@ -397,7 +404,7 @@ class DRV(object):
         0 must not be a possible value of `right` (even with probability 0).
         """
         return self._apply2(operator.truediv, right, connective='/')
-    def __floordiv__(self, right) -> 'DRV':
+    def __floordiv__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self // right`.
 
@@ -423,8 +430,8 @@ class DRV(object):
         As with :meth:`apply()`, probabilities are added up wherever negation
         is many-to-one (for numbers it is one-to-one).
         """
-        return self.apply(operator.neg, tree=self._combine(self, '-'))
-    def __eq__(self, right) -> 'DRV':  # type: ignore[override]
+        return self.apply(operator.neg, tree=self._combine1('-'))
+    def __eq__(self, right: Any) -> 'DRV':  # type: ignore[override]
         """
         Handler for :code:`self == right`.
 
@@ -474,7 +481,7 @@ class DRV(object):
     def __bool__(self):
         # Prevent DRVs being truthy, and hence "3 in [DRV({2: 1})]" is true.
         raise ValueError('The truth value of a random variable is ambiguous')
-    def __le__(self, right) -> 'DRV':
+    def __le__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self <= right`.
 
@@ -488,7 +495,7 @@ class DRV(object):
         value with probability 0.
         """
         return self._apply2(operator.le, right, connective='<=')
-    def __lt__(self, right) -> 'DRV':
+    def __lt__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self < right`.
 
@@ -502,7 +509,7 @@ class DRV(object):
         value with probability 0.
         """
         return self._apply2(operator.lt, right, connective='<')
-    def __ge__(self, right) -> 'DRV':
+    def __ge__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self >= right`.
 
@@ -516,7 +523,7 @@ class DRV(object):
         value with probability 0.
         """
         return self._apply2(operator.ge, right, connective='>=')
-    def __gt__(self, right) -> 'DRV':
+    def __gt__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self > right`.
 
@@ -549,7 +556,7 @@ class DRV(object):
         reroll_prob = self.__dist[reroll_value]
         each_die = self.to_dict()
         each_die.pop(reroll_value)
-        def iter_pairs():
+        def iter_pairs() -> DataPairs:
             for idx in range(rerolls + 1):
                 for value, prob in each_die.items():
                     value += reroll_value * idx
@@ -585,13 +592,23 @@ class DRV(object):
             Added ``allow_drv`` option.
         """
         return DRV._reduced(self._items(), func, tree=tree, drv=allow_drv)
-    def _apply2(self, func, right, connective=None) -> 'DRV':
+    def _apply2(
+        self,
+        func: Callable[[Any, Any], Any],
+        right: Any,
+        connective: str,
+    ) -> 'DRV':
         """Apply a binary function, with the values of this DRV on the left."""
         expr_tree = self._combine(self, right, connective)
         if isinstance(right, DRV):
             return self._cross_reduce(func, right, tree=expr_tree)
         return self.apply(lambda x: func(x, right), tree=expr_tree)
-    def _cross_reduce(self, func, right, tree=None) -> 'DRV':
+    def _cross_reduce(
+        self,
+        func: Callable[[Any, Any], Any],
+        right: 'DRV',
+        tree: ExpressionTree = None,
+    ) -> 'DRV':
         """
         Take the cross product of self and right, then reduce by applying func.
         """
@@ -600,7 +617,9 @@ class DRV(object):
             lambda value: func(*value),
             tree=tree,
         )
-    def _iter_cross(self, right):
+    def _iter_cross(
+        self, right: 'DRV',
+    ) -> Iterable[Tuple[Tuple[Any, Any], Probability]]:
         """
         Take the cross product of self and right, with probabilities assuming
         that the two are independent variables.
@@ -613,7 +632,12 @@ class DRV(object):
             for (rvalue, rprob) in right._items():
                 yield ((lvalue, rvalue), lprob * rprob)
     @staticmethod
-    def _reduced(iterable, func=lambda x: x, tree=None, drv=False) -> 'DRV':
+    def _reduced(
+        iterable: DataPairs,
+        func: Callable = lambda x: x,
+        tree: ExpressionTree = None,
+        drv: bool = False,
+    ) -> 'DRV':
         distribution: dict = collections.defaultdict(int)
         if not drv:
             # Optimisation does make a difference to e.g. test_convolve
@@ -630,7 +654,7 @@ class DRV(object):
         return DRV(distribution, tree=tree)
     @staticmethod
     def weighted_average(
-        iterable: Iterable[Tuple['DRV', 'Probability']],
+        iterable: Iterable[Tuple['DRV', Probability]],
         *,
         tree: ExpressionTree = None,
     ) -> 'DRV':
@@ -659,11 +683,15 @@ class DRV(object):
 
         .. versionadded:: 1.1
         """
-        def iter_pairs():
+        def iter_pairs() -> DataPairs:
             for drv, weight in iterable:
                 yield from drv._weighted_items(weight)
         return DRV._reduced(iter_pairs(), tree=tree)
-    def _weighted_items(self, weight, pred=lambda x: True):
+    def _weighted_items(
+        self,
+        weight: Probability,
+        pred: Callable[[Any], bool] = lambda x: True,
+    ) -> DictData:
         for value, prob in self.__dist.items():
             if pred(value):
                 yield value, prob * weight
@@ -695,30 +723,32 @@ class DRV(object):
             raise ZeroDivisionError('predicate is True with probability 0')
         return DRV(self._weighted_items(1 / total, predicate))
     @staticmethod
-    def _combine(*args):
+    def _combine(
+        left: Any, right: Any, connector: str,
+    ) -> Optional[ExpressionTree]:
         """
         Helper for combining two expressions into a combined expression.
         """
-        for arg in args:
-            if isinstance(arg, DRV) and arg.__expr_tree is None:
-                return None
-        def unpack(subexpr):
-            if isinstance(subexpr, DRV):
-                return subexpr.__expr_tree
-            return Atom(repr(subexpr))
-        if len(args) == 2:
-            # Unary expression
-            subexpr, connective = args
-            return UnaryExpression(unpack(subexpr), connective)
-        # Binary expression
-        left, right, connective = args
-        return BinaryExpression(unpack(left), unpack(right), connective)
-    def _combine_post(self, postfix):
+        try:
+            def unpack(subexpr: Any) -> ExpressionTree:
+                if isinstance(subexpr, DRV):
+                    if subexpr.__expr_tree is None:
+                        raise TypeError
+                    return subexpr.__expr_tree
+                return Atom(repr(subexpr))
+            return BinaryExpression(unpack(left), unpack(right), connector)
+        except TypeError:
+            return None
+    def _combine1(self, connector: str) -> Optional[ExpressionTree]:
+        if self.__expr_tree is None:
+            return None
+        return UnaryExpression(self.__expr_tree, connector)
+    def _combine_post(self, postfix: str) -> Optional[ExpressionTree]:
         if self.__expr_tree is None:
             return None
         return AttrExpression(self.__expr_tree, postfix)
 
-def p(var: DRV) -> 'Probability':
+def p(var: DRV) -> Probability:
     """
     Return the probability with which `var` takes value True.
 

@@ -40,9 +40,9 @@ def special(
         target = 10
     elif target < 2:
         target = 2
-    def success(x):
+    def success(x: int) -> Any:
         return Value(int(x >= target))
-    def result(x):
+    def result(x: int) -> Any:
         return Value(-1) if x == 1 else success(x)
     if rerolls == 0:
         return d10.apply(result)
@@ -86,7 +86,7 @@ class RevisedResult(object):
             self.any_success or other.any_success,
         )
     # Needed for *, explode()
-    def __mul__(self, other: int):
+    def __mul__(self, other: int) -> 'RevisedResult':
         return RevisedResult(self.net_success * other, self.any_success)
     def __int__(self) -> int:
         """

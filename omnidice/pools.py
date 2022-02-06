@@ -387,7 +387,7 @@ def pool(
         return plain(pool)
     return pool
 
-def _how_many(drvs: Tuple[DRV, ...], count: int = 1):
+def _how_many(drvs: Tuple[DRV, ...], count: int = 1) -> int:
     """
     Helper to count how many dice are in the specified params.
     """

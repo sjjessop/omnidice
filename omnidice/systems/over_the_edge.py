@@ -69,7 +69,7 @@ def pool(
     *,
     botch: bool = False,
     explode: Union[bool, int] = False,
-    unstoppable=False,
+    unstoppable: bool = False,
 ) -> DRV:
     """
     A :obj:`~omnidice.pools.pool` with the distribution of all the values on

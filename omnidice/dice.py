@@ -1,5 +1,6 @@
 
 from fractions import Fraction
+from typing import Any
 
 from .drv import DRV
 from .expressions import Atom
@@ -46,7 +47,7 @@ class d(DRV):
     def __ne__(self, other):
         return self._compare(other, '__ne__')
 
-def roll(drv: DRV):
+def roll(drv: DRV) -> Any:
     """
     Roll the dice indicated by `drv`.
 
