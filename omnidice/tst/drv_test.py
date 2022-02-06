@@ -112,6 +112,11 @@ def test_tree():
     assert repr(drv.faster()) == 'DRV({1: 0.5, 2: 0.5})'
     assert drv.faster().to_dict() == drv.to_dict()
 
+    # Test the case of unary expressions of a DRV with no expression tree.
+    drv = DRV({1: Fraction(1, 2), 2: Fraction(1, 2)})
+    assert repr(-drv) == 'DRV({-1: Fraction(1, 2), -2: Fraction(1, 2)})'
+    assert (-drv).to_dict() == {-1: Fraction(1, 2), -2: Fraction(1, 2)}
+
     class Addable(object):
         def __init__(self, value):
             self.value = value
