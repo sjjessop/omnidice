@@ -17,8 +17,8 @@ variables. `Current release documentation <https://omnidice.readthedocs.io/>`_.
    :alt: codecov
    :target: https://codecov.io/gh/sjjessop/omnidice
 
-.. image:: https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue.svg
-   :alt: Python versions 3.6 3.7 3.8 3.9 3.10
+.. image:: https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue.svg
+   :alt: Python versions 3.7 3.8 3.9 3.10
    :target: https://www.python.org/downloads/
 
 .. image:: https://img.shields.io/badge/badges-5-green.svg
@@ -303,6 +303,9 @@ Compatibility
 
 Omnidice does not work with Python versions 3.5 or lower, because it uses
 f-strings, variable annotations, and possibly other features new in 3.6.
+
+The last version of omnidice that was tested with Python version 3.6 is v1.2.2
+Support for Python 3.6 is removed in v1.3.0
 
 It should work with pretty much any versions of its optional dependencies,
 ``numpy`` and ``pandas``.
