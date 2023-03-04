@@ -17,8 +17,8 @@ variables. `Current release documentation <https://omnidice.readthedocs.io/>`_.
    :alt: codecov
    :target: https://codecov.io/gh/sjjessop/omnidice
 
-.. image:: https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-blue.svg
-   :alt: Python versions 3.7 3.8 3.9 3.10
+.. image:: https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg
+   :alt: Python versions 3.7 3.8 3.9 3.10 3.11
    :target: https://www.python.org/downloads/
 
 .. image:: https://img.shields.io/badge/badges-5-green.svg
