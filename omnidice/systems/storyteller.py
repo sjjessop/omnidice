@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional, Union
 
 from omnidice.dice import d10
 from omnidice.drv import DRV
@@ -74,7 +74,7 @@ class RevisedResult(object):
     net_success: float
     #: Whether or not there were any success before cancellation by 1s.
     any_success: bool
-    def __init__(self, net_success: float, any_success: bool = None):
+    def __init__(self, net_success: float, any_success: Optional[bool] = None):
         if any_success is None:
             any_success = (net_success > 0)
         object.__setattr__(self, 'net_success', net_success)

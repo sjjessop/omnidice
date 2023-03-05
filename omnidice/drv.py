@@ -102,7 +102,7 @@ class DRV(object):
         self,
         distribution: 'DictData',
         *,
-        tree: ExpressionTree = None,
+        tree: Optional[ExpressionTree] = None,
     ):
         self.__dist = MappingProxyType(dict(distribution))
         # Cumulative distribution. Defer calculating this, because we only
@@ -133,7 +133,7 @@ class DRV(object):
         return all(self.__dist[val] == other.__dist[val] for val in values)
     def is_close(
         self, other: 'DRV', *,
-        rel_tol: float = None, abs_tol: float = None,
+        rel_tol: Optional[float] = None, abs_tol: Optional[float] = None,
     ) -> bool:
         """
         Return True if `self` and `other` have approximately the same discrete
@@ -569,7 +569,7 @@ class DRV(object):
         self,
         func: Callable[[Any], Any],
         *,
-        tree: ExpressionTree = None,
+        tree: Optional[ExpressionTree] = None,
         allow_drv: bool = False,
     ) -> 'DRV':
         """
@@ -607,7 +607,7 @@ class DRV(object):
         self,
         func: Callable[[Any, Any], Any],
         right: 'DRV',
-        tree: ExpressionTree = None,
+        tree: Optional[ExpressionTree] = None,
     ) -> 'DRV':
         """
         Take the cross product of self and right, then reduce by applying func.
@@ -635,7 +635,7 @@ class DRV(object):
     def _reduced(
         iterable: DataPairs,
         func: Callable = lambda x: x,
-        tree: ExpressionTree = None,
+        tree: Optional[ExpressionTree] = None,
         drv: bool = False,
     ) -> 'DRV':
         distribution: dict = collections.defaultdict(int)
@@ -656,7 +656,7 @@ class DRV(object):
     def weighted_average(
         iterable: Iterable[Tuple['DRV', Probability]],
         *,
-        tree: ExpressionTree = None,
+        tree: Optional[ExpressionTree] = None,
     ) -> 'DRV':
         """
         Compute a weighted average of DRVs, each with its own probability.

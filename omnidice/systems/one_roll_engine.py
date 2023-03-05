@@ -65,7 +65,7 @@ that)::
 from dataclasses import dataclass
 import functools
 from itertools import groupby, starmap
-from typing import Callable, Iterable, Tuple
+from typing import Callable, Iterable, Optional, Tuple
 
 from omnidice.dice import d10
 from omnidice.drv import DRV
@@ -170,7 +170,7 @@ def matches(
     d: int,
     *,
     hd: int = 0,
-    wd: Callable[[Result], Result] = None,
+    wd: Optional[Callable[[Result], Result]] = None,
     difficulty: int = 1,
     allow_highest: bool = False,
 ) -> DRV:

@@ -131,7 +131,9 @@ from abc import ABC, abstractmethod
 from collections import abc
 from dataclasses import dataclass
 import itertools
-from typing import Any, Callable, Iterable, Iterator, Tuple, Type, TypeVar
+from typing import (
+    Any, Callable, Iterable, Iterator, Optional, Tuple, Type, TypeVar,
+)
 
 from omnidice.drv import DRV
 
@@ -282,7 +284,7 @@ class PlainResult(Result):
 def pool(
     *drvs: DRV, count: int = 1,
     result_type: Type[Result] = PlainResult,
-    normalize: Callable[[Tuple[T, ...]], Iterable[T]] = None,
+    normalize: Optional[Callable[[Tuple[T, ...]], Iterable[T]]] = None,
 ) -> DRV:
     """
     A "dice pool" as used in various games. This is a DRV whose possible values
