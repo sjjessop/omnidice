@@ -29,7 +29,7 @@ def run_with_optimisation(payload):
     print(f'{payload} with optimisation')
     return run(payload), eval(payload, dice.__dict__.copy())
 
-def run_both_ways(payload, factor):
+def run_both_ways(payload: str, factor: float) -> None:
     try:
         import numpy  # noqa: F401 'numpy' imported but unused
     except ModuleNotFoundError:
