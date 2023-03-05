@@ -194,8 +194,14 @@ Equality
 --------
 
 Because ``==`` is overridden to return a ``DRV`` (not a boolean), ``DRV``
-objects are not hashable and cannot be used in sets or dictionaries. They also
-raise an exception in boolean context.
+objects are not hashable and cannot be used in sets or as dictionary keys. They
+also raise an exception in boolean context.
+
+This is a breach of Liskov substitution, but it's the same decision made by
+other libraries such as numpy and pandas. It also matches the common convention
+in mathematics that if x and y are random variables then p(x = y), denotes the
+probability of a sample from each matching: nothing to do with whether x and y
+are identical random variables!
 
 Performance and precision
 =========================
