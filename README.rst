@@ -343,8 +343,8 @@ It should work with pretty much any versions of its optional dependencies,
 Changelog
 =========
 
-Version 1.3.0
--------------
+Version 1.3.0 (2023-07-09)
+--------------------------
 
 Features
 ~~~~~~~~
@@ -362,8 +362,8 @@ Dependencies
 * Python 3.6 is no longer supported, and is removed from the test matrix.
 
 
-Version 1.2.2
--------------
+Version 1.2.2 (2022-05-02)
+--------------------------
 
 Features
 ~~~~~~~~
@@ -378,8 +378,8 @@ Bugfixes
 * Support mypy 0.931
 
 
-Version 1.2.1
--------------
+Version 1.2.1 (2020-11-08)
+--------------------------
 
 Features
 ~~~~~~~~
@@ -398,8 +398,8 @@ Bugfixes
   `sorted()` on a sequence we now need to declare its elements comparable as
   well as them actually being comparable at runtime.
 
-Version 1.2.0
--------------
+Version 1.2.0 (2020-08-31)
+--------------------------
 
 Features
 ~~~~~~~~
@@ -408,8 +408,8 @@ Features
 * One Roll Engine.
 * Open D6.
 
-Version 1.1.0
--------------
+Version 1.1.0 (2020-08-11)
+--------------------------
 
 Features
 ~~~~~~~~
