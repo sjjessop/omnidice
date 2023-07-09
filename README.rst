@@ -343,6 +343,25 @@ It should work with pretty much any versions of its optional dependencies,
 Changelog
 =========
 
+Version 1.3.0
+-------------
+
+Features
+~~~~~~~~
+
+No changes to API, but:
+
+* Python 3.11 is now supported, and added to the test matrix.
+* README improvements.
+* Made mypy much stricter, so if you're using mypy and referring to the tests
+  for code examples, they're less likely to need type fixes.
+
+Dependencies
+~~~~~~~~~~~~
+
+* Python 3.6 is no longer supported, and is removed from the test matrix.
+
+
 Version 1.2.2
 -------------
 
