@@ -49,7 +49,7 @@ def special(
     # Sneaky trick: by counting a 10 as more than 1 success, this means it's
     # the highest possible result, so explode() treats it as the only thing to
     # reroll. Then we round down the extra fractions at the end.
-    def rounded(x):
+    def rounded(x: Any) -> Any:
         return Value(int(x) + 1)
     rerolled = (
         d10.apply(lambda x: Value(1 + 1e-9) if x == 10 else success(x))

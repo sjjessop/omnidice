@@ -203,6 +203,30 @@ in mathematics that if x and y are random variables then p(x = y), denotes the
 probability of a sample from each matching: nothing to do with whether x and y
 are identical random variables!
 
+Type annotations
+----------------
+
+Those using mypy to statically check code that uses omnidice will face a few
+glitches:
+
+When using the ``given`` method with a lambda function, the input has type
+``Any`` and the lambda must return ``bool``. Almost anything you do in a lambda
+function with an ``Any`` input will result in an ``Any`` result, so you will
+need to ignore the type warning, or else cast or convert either the input or
+the output. For example ``d6.given(lambda x: x % 2 != 0)`` is no good, but
+``d6.given(lambda x: bool(x % 2))`` and
+``d6.given(lambda x: cast(int, x) % 2 != 0)`` both type-check OK.
+
+Probabilities returned from ``DRV`` objects have type ``Probability``, which
+currently is ``Union[numbers.Real, float]``. The ``numbers`` package is not
+properly supported by mypy, and in any case has some issues. One consequence is
+that ``Real`` is not order-comparable with ``float``. See
+https://github.com/python/mypy/issues/3186 for more information.
+
+These glitches may be fixed in a future release, but probably that release will
+be deemed backward-incompatible, since it will make changes that cause type
+errors in code that previously type-checked.
+
 Performance and precision
 =========================
 

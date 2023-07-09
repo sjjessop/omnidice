@@ -1,12 +1,13 @@
 
 import timeit
+from typing import Tuple
 from unittest.mock import patch
 
 import pytest
 
 from omnidice import dice
 
-def run(payload):
+def run(payload: str) -> float:
     setup = 'from omnidice import dice'
     timer = timeit.Timer(payload, setup, globals=dice.__dict__.copy())
     number, time_taken = timer.autorange()
@@ -20,12 +21,12 @@ def run(payload):
     return best
 
 @patch('omnidice.drv.CONVOLVE_OPTIMISATION', False)
-def run_without_optimisation(payload):
+def run_without_optimisation(payload: str) -> Tuple[float, dict]:
     print(f'{payload} without optimisation')
     return run(payload), eval(payload, dice.__dict__.copy())
 
 @patch('omnidice.drv.CONVOLVE_OPTIMISATION', True)
-def run_with_optimisation(payload):
+def run_with_optimisation(payload: str) -> Tuple[float, dict]:
     print(f'{payload} with optimisation')
     return run(payload), eval(payload, dice.__dict__.copy())
 
@@ -64,7 +65,7 @@ expressions = (
 # Wrapper so that the tests can be run with pytest. Since the filename doesn't
 # have "test" in it, pytest will not pick them up automatically.
 @pytest.mark.parametrize('expression,factor', expressions)
-def test_optimisation(expression, factor):
+def test_optimisation(expression: str, factor: float) -> None:
     run_both_ways(expression, factor)
 
 # Wrapper so that the tests can be run without pytest.

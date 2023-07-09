@@ -2,12 +2,13 @@
 from fractions import Fraction
 import math
 import re
+from typing import Any, Dict, List
 
 import pytest
 
 from omnidice import dice, drv
 
-def test_d6():
+def test_d6() -> None:
     """Basic usage of a die"""
     d6 = dice.d6
     distribution = d6.to_dict()
@@ -19,22 +20,22 @@ def test_d6():
     assert d6.to_dict()[1] == pytest.approx(1 / 6)
 
 @pytest.mark.parametrize('sides', (2, 3, 4, 6, 8, 10, 12, 20, 30, 100, 1000))
-def test_presets(sides):
+def test_presets(sides: int) -> None:
     """All the usual dice are available"""
     result = getattr(dice, f'd{sides}').to_dict()
     assert result == dice.d(sides).to_dict()
 
 @pytest.mark.parametrize('sides', tuple(range(1, 51)) + (100, 200, 471, 1000))
-def test_one_die(sides):
+def test_one_die(sides: int) -> None:
     """Create dice with any number of sides"""
     check_uniform(dice.d(sides), set(range(1, sides + 1)))
 
 @pytest.mark.parametrize('sides', (0, -1, 1.0, -1.0, 0.5, Fraction(3, 2)))
-def test_bad_die(sides):
+def test_bad_die(sides: Any) -> None:
     with pytest.raises((ValueError, TypeError)):
         dice.d(sides)
 
-def test_roll_die():
+def test_roll_die() -> None:
     """Use the roll() function to roll one die"""
     d6 = dice.d6
     roll = dice.roll
@@ -42,7 +43,7 @@ def test_roll_die():
     # In theory this test has a tiny probability of failing
     assert set(roll(d6) for _ in range(1000)) == {1, 2, 3, 4, 5, 6}
 
-def test_simple_expressions():
+def test_simple_expressions() -> None:
     """
     You can write arithmetic expressions using dice and numeric constants. The
     result is an object which you can roll just like a single die.
@@ -55,7 +56,7 @@ def test_simple_expressions():
     check_uniform((dice.d6 + 1) // 2, {1, 2, 3})
     check_uniform(-dice.d6, {-1, -2, -3, -4, -5, -6})
 
-def test_apply():
+def test_apply() -> None:
     """
     For calculations not supported by operator overloading, you can use the
     apply() function to re-map the generated values. It can be a many-to-one
@@ -70,7 +71,7 @@ def test_apply():
         {0, 1, 2},
     )
 
-def test_advanced_expressions():
+def test_advanced_expressions() -> None:
     """
     Arithmetic expressions can involve more than one die.
     """
@@ -89,7 +90,7 @@ def test_advanced_expressions():
         set(range(1, 101)),
     )
 
-def test_at_operator():
+def test_at_operator() -> None:
     """
     The @ operator represents rolling multiple dice (or other expressions) and
     adding the results together. 2 @ d6 is the same as d6 + d6.
@@ -106,16 +107,16 @@ def test_at_operator():
     with pytest.raises(ValueError):
         0 @ d6
     with pytest.raises(TypeError):
-        0.5 @ d6
+        0.5 @ d6  # type: ignore[operator]
     assert (2@d6).to_dict() == (d6 + d6).to_dict()
     assert (3@d6).to_dict() == (d6 + d6 + d6).to_dict()
     assert min((10@d6).to_dict().keys()) == 10
     assert max((10@d6).to_dict().keys()) == 60
     assert (2@(d6 + 1)).to_dict() == (d6 + d6 + 2).to_dict()
     with pytest.raises(TypeError):
-        2 * d6
+        2 * d6  # type: ignore[operator]
 
-def test_excessive_expressions():
+def test_excessive_expressions() -> None:
     """
     I don't know any games that need this, but for completeness we allow dice
     on the left-hand-side of the @ operator. This is only allowed if the
@@ -139,7 +140,7 @@ def test_excessive_expressions():
     # @ operator does not commute.
     assert (dice.d3 @ dice.d6).to_dict() != (dice.d6 @ dice.d3).to_dict()
 
-def test_comparisons():
+def test_comparisons() -> None:
     """
     Expressions involving a comparison operation return a random variable
     over two values: True and False.
@@ -150,7 +151,7 @@ def test_comparisons():
     ambiguous whether for example d6 == d6 should return True (because they're
     the same object) or a distibution {True: 1 / 6, False: 5 / 6}.
     """
-    def true_or_false(prob_true):
+    def true_or_false(prob_true: float) -> Dict[bool, Any]:
         if prob_true >= 1:
             return {True: 1}
         if prob_true <= 0:
@@ -202,7 +203,7 @@ def test_comparisons():
     # Two different 50/50 chances
     check_approx(10@(dice.d10 >= 6), 10@(dice.d2 >= 2))
     # Bucket o' dice and count successes
-    def prob(n, difficulty=8, dice=10):
+    def prob(n: int, difficulty: int = 8, dice: int = 10) -> float:
         p_succ = (11 - difficulty) / 10
         return (
             (p_succ ** n) * (1 - p_succ) ** (dice - n)
@@ -216,7 +217,7 @@ def test_comparisons():
     result = (10 @ (dice.d10 >= 8) >= 4).to_dict()[True]
     assert result == pytest.approx(prob_4_or_more)
 
-def test_explode():
+def test_explode() -> None:
     """
     Plenty of systems use dice that explode on their maximum value.
     """
@@ -232,13 +233,13 @@ def test_explode():
     assert multi_explode.to_dict().get(12, 0) == 0
     assert (multi_explode > 12).to_dict()[True] == pytest.approx(1 / 36)
 
-def test_repr():
+def test_repr() -> None:
     """
     The representation of these objects reflects the original expression. It's
     not just a dump of the probabilities unless the expression was created in
     a way we can't track.
     """
-    def check(expr, string_form):
+    def check(expr: drv.DRV, string_form: str) -> None:
         assert repr(expr) == string_form
         result = eval(string_form, dice.__dict__)
         check_approx(expr, result)
@@ -286,14 +287,14 @@ def test_repr():
     check((-dice.d6).faster(), '(-d6).faster()')
 
 @pytest.mark.parametrize('sides', range(1, 150))
-def test_repr_sides(sides):
+def test_repr_sides(sides: int) -> None:
     """
     Regression test for bug introduced while adding mypy.
     """
     die = dice.d(sides)
     check_approx(eval(repr(die), dice.__dict__), die)
 
-def test_preset_dice():
+def test_preset_dice() -> None:
     """
     The module publishes which dice exist as module attributes.
     """
@@ -302,7 +303,7 @@ def test_preset_dice():
     actual = set(filter(pattern.fullmatch, dice.__dict__))
     assert published == actual
 
-def test_table():
+def test_table() -> None:
     """
     For eyeballing small data, we can dump the probabilities as a text table.
     This table is often easier to read with the probabilities as floats.
@@ -330,7 +331,7 @@ def test_table():
     """)
 
 @pytest.mark.parametrize('expr', [dice.d6, 10 @ dice.d6, dice.d10 + 1])
-def test_pandas(expr):
+def test_pandas(expr: drv.DRV) -> None:
     """
     For eyeballing or charting data, or whatever other onward processing you
     like, we can export the distribution as a pandas Series object. This is
@@ -344,10 +345,10 @@ def test_pandas(expr):
     else:
         assert dict(expr.to_pd()) == expr.to_dict()
         # You can also construct a random variable from a Series
-        check_approx(dice.DRV(expr.to_pd()), expr)
+        check_approx(drv.DRV(expr.to_pd()), expr)
 
 @pytest.mark.parametrize('expr', [dice.d6, 10 @ dice.d6, dice.d10 + 1])
-def test_faster(expr):
+def test_faster(expr: drv.DRV) -> None:
     """
     If the default implementation using fractions is slow, converting to
     float is likely to be faster. However it is less precise.
@@ -359,14 +360,14 @@ def test_faster(expr):
     # the total probability less than 1.
     expr.faster().sample()
 
-def test_regression_1():
+def test_regression_1() -> None:
     """
     Regression test for https://github.com/sjjessop/omnidice/issues/1
     """
     expr = (-dice.d6).explode()
     check_approx(expr, eval(repr(expr), dice.__dict__))
 
-def check_uniform(die, expected_values):
+def check_uniform(die: drv.DRV, expected_values: set) -> None:
     """
     Check that "die" has uniform distribution.
     """
@@ -376,21 +377,21 @@ def check_uniform(die, expected_values):
         assert result[idx] == pytest.approx(1 / len(expected_values))
     assert die.sample() in expected_values
     assert dice.roll(die) in expected_values
-    rolls = set()
+    rolls: set = set()
     for idx in range(50):
         # I would just break, but I'm playing for 100% branch coverage.
         if rolls != expected_values:
             rolls.update(die.sample() for _ in range(len(expected_values)))
     assert rolls == expected_values
 
-def check_approx(left, right):
-    left, right = left.to_dict(), right.to_dict()
+def check_approx(left_drv: drv.DRV, right_drv: drv.DRV) -> None:
+    left, right = left_drv.to_dict(), right_drv.to_dict()
     assert left.keys() == right.keys()
     for key in left.keys():
         assert left[key] == pytest.approx(right[key])
 
-def check_table_match(left, right):
-    def clean(table):
+def check_table_match(left: str, right: str) -> None:
+    def clean(table: str) -> List[str]:
         lines = table.splitlines()
         return list(filter(None, map(str.strip, lines)))
     # Left-hand table, which came from an expression, is in "clean" form...

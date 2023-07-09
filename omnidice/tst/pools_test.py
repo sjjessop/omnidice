@@ -1,13 +1,15 @@
 
 from fractions import Fraction
+from typing import Any, Iterable, Tuple
 
 import pytest
 
 from omnidice import pools
 from omnidice.dice import d6, d8
 from omnidice.drv import DRV, p
+from omnidice.pools import CT
 
-def test_plain_result():
+def test_plain_result() -> None:
     assert pools.PlainResult(1, 2) == pools.PlainResult(2, 1)
     assert pools.PlainResult(1, 1, 2) == pools.PlainResult(1, 2, 1)
 
@@ -19,7 +21,7 @@ def test_plain_result():
     assert not pools.PlainResult(1, 2) == (1, 2)
 
 @pytest.mark.parametrize('size', range(0, 11))
-def test_result_repr(size):
+def test_result_repr(size: int) -> None:
     """
     Because we have to do some work to set a sensible name for the subclasses
     of PlainResult, we might as well test that.
@@ -30,7 +32,7 @@ def test_result_repr(size):
     assert repr(pools.KeepHighest(size)(*values)).startswith(f'Highest_{size}')
     assert repr(pools.KeepLowest(size)(*values)).startswith(f'Lowest_{size}')
 
-def test_pool():
+def test_pool() -> None:
     """
     Take a bucket of DRVs, and consider the results irrespective of order.
     """
@@ -38,7 +40,7 @@ def test_pool():
     assert p(pool == pools.PlainResult(1, 1)) == Fraction(1, 36)
     assert p(pool == pools.PlainResult(1, 2)) == Fraction(2, 36)
 
-def test_drv_equivalence():
+def test_drv_equivalence() -> None:
     """
     You can work out some DRV operations "the slow way" using a pool.
     """
@@ -50,14 +52,14 @@ def test_drv_equivalence():
     assert drv2.is_same(pool_drv)
     assert pool_drv2.is_same(pool_drv)
 
-def test_result_sum():
+def test_result_sum() -> None:
     """
     Result is summable, since that's a common final step.
     """
     pool = pools.pool(d6, d6, d8)
     assert pool.apply(sum).is_same(pool.apply(lambda x: sum(x.values)))
 
-def test_mixed_pool():
+def test_mixed_pool() -> None:
     """
     Not all dice in pool need to be the same, and you can build up a pool one
     item at a time if you want to.
@@ -68,7 +70,7 @@ def test_mixed_pool():
     assert p(pool == pools.PlainResult(6, 7)) == Fraction(1, 48)
     assert pool.is_same(pools.pool(d6) + d8)
 
-def test_empty_pool():
+def test_empty_pool() -> None:
     """
     An empty pool has one possible value: the empty collection of values.
     """
@@ -78,7 +80,7 @@ def test_empty_pool():
     assert empty1.to_dict() == {pools.PlainResult(): 1}
 
 @pytest.mark.parametrize('bad', range(-10, 0))
-def test_bad_count(bad):
+def test_bad_count(bad: int) -> None:
     """
     Less than empty is not allowed, and neither is count with many DRVs.
     """
@@ -87,7 +89,7 @@ def test_bad_count(bad):
     with pytest.raises(TypeError):
         pools.pool(d6, d8, count=1 - bad)
 
-def test_pool_addition():
+def test_pool_addition() -> None:
     """
     You can add a constant, DRV or pool to a pool, and the effect is of
     including one or more extra dice in the pool.
@@ -97,7 +99,7 @@ def test_pool_addition():
     assert p(pool + d6 == pools.PlainResult(1, 1)) == Fraction(1, 36)
     assert p(pool + pool == pools.PlainResult(1, 1)) == Fraction(1, 36)
 
-def test_keep_highest():
+def test_keep_highest() -> None:
     """
     Roll N, keep the best K of some DRV.
     """
@@ -118,7 +120,7 @@ def test_keep_highest():
     assert not poolA.is_same(poolC)
     assert poolD.is_same(poolC)
 
-def test_keep_lowest():
+def test_keep_lowest() -> None:
     """
     Roll N, keep the worst K of some DRV.
     """
@@ -129,18 +131,18 @@ def test_keep_lowest():
     pool0 = pools.keep_lowest(0, d6, count=10)
     assert pool0.is_same(DRV({pools.PlainResult(): 1}))
 
-def test_drop_lowest():
+def test_drop_lowest() -> None:
     expected = pools.keep_highest(3, d6, count=5)
     assert pools.drop_lowest(2, d6, count=5).is_same(expected)
     assert pools.drop_lowest(2, d6, d6, d6, d6, d6).is_same(expected)
 
-def test_drop_highest():
+def test_drop_highest() -> None:
     expected = pools.keep_lowest(3, d6, count=5)
     assert pools.drop_highest(2, d6, count=5).is_same(expected)
     assert pools.drop_highest(2, d6, d6, d6, d6, d6).is_same(expected)
 
 @pytest.mark.parametrize('bad', range(-10, 0))
-def test_bad_keep_numbers(bad):
+def test_bad_keep_numbers(bad: int) -> None:
     """
     You can't pass a negative number of dice to keep, but you can drop more
     dice than you have (resulting in no dice).
@@ -152,24 +154,23 @@ def test_bad_keep_numbers(bad):
     assert pools.drop_highest(10, d6, count=-bad).is_same(pools.pool())
     assert pools.drop_lowest(10, d6, count=-bad).is_same(pools.pool())
 
-def test_normalize():
+def test_normalize() -> None:
     """
     You can optimize how the pool works in two different ways: by passing a
     class or by passing a function.
     """
+    def big2(values: Tuple[CT, ...]) -> Iterable[Any]:
+        return sorted(values, reverse=True)[0:2]
+
     class Keep2(pools.PlainResult):
-        def normalize(self, values):
-            return sorted(values, reverse=True)[0:2]
+        def normalize(self, values: Tuple[CT, ...]) -> Iterable[CT]:
+            return big2(values)
 
     expected = pools.keep_highest(2, d6, count=3)
     assert pools.pool(d6, count=3, result_type=Keep2).is_same(expected)
+    assert pools.pool(d6, count=3, normalize=big2).is_same(expected)
 
-    assert pools.pool(
-        d6, count=3,
-        normalize=lambda values: sorted(values, reverse=True)[0:2],
-    ).is_same(expected)
-
-def test_custom_pools():
+def test_custom_pools() -> None:
     """
     I'm not sure how useful this is, but for completeness you can add together
     pools with different result types, including those not derived from the
@@ -177,7 +178,7 @@ def test_custom_pools():
     the left of the addition.
     """
     class Keep2(pools.PlainResult):
-        def normalize(self, values):
+        def normalize(self, values: Tuple[CT, ...]) -> Iterable[CT]:
             return sorted(values, reverse=True)[0:2]
 
     poolA = pools.pool(d6, count=3, result_type=Keep2)
@@ -194,10 +195,10 @@ def test_custom_pools():
     # result_type doesn't even need to inherit from pools.PlainResult. We don't
     # have to consider the order of results insignificant if we don't want to.
     class Ordered(pools.Result):
-        def __init__(self, *values):
+        def __init__(self, *values: Any):
             self._values = values
         @property
-        def values(self):
+        def values(self) -> Tuple[Any, ...]:
             return self._values
 
     assert Ordered(1, 2) == Ordered(1, 2)

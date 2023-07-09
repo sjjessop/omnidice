@@ -11,7 +11,7 @@ import os
 from random import Random
 from types import MappingProxyType
 from typing import (
-    Any, Callable, Dict, Iterable, Mapping, Optional, Tuple, Union,
+    Any, Callable, Dict, Iterable, Mapping, NoReturn, Optional, Tuple, Union,
 )
 
 from .expressions import (
@@ -108,15 +108,16 @@ class DRV(object):
         # Cumulative distribution. Defer calculating this, because we only
         # need it if the variable is actually sampled. Intermediate values in
         # building up a complex DRV won't ever be sampled, so save the work.
-        self.__cdf = None
-        self.__lcm = None
-        self.__intvalued = None
+        self.__cdf: Optional[Tuple[Probability, ...]] = None
+        self.__cdf_values: Tuple = ()
+        self.__lcm: Optional[int] = None
+        self.__intvalued: Optional[bool] = None
         self.__expr_tree = tree
         # Computed probabilities can hit 0 due to float underflow, but maybe
         # we should strip out anything with probability 0.
         if not all(0 <= prob <= 1 for value, prob in self._items()):  # type: ignore[operator] # Real is underspecified
             raise ValueError('Probability not in range')
-    def __repr__(self):
+    def __repr__(self) -> str:
         if self.__expr_tree is not None:
             return self.__expr_tree.bracketed()
         return f'DRV({self.__dist})'
@@ -161,7 +162,7 @@ class DRV(object):
         Return a dictionary mapping all possible values to probabilities.
         """
         return self.__dist.copy()
-    def to_pd(self):
+    def to_pd(self) -> Any:
         """
         Return a :class:`pandas.Series` mapping values to probabilities. The
         series is indexed by the possible values.
@@ -214,22 +215,25 @@ class DRV(object):
         """
         return DRV(self.__dist, tree=tree)
     @property
-    def cdf(self):
+    def cdf(self) -> Tuple[Probability, ...]:
         if self.__cdf is None:
-            def iter_totals():
-                total = 0
+            def iter_totals() -> Iterable[Tuple[Any, Probability]]:
+                total: Probability = 0
                 for value, probability in self._items():
                     total += probability
                     yield value, total
                 # In case of rounding errors
                 if total < 1:
                     yield value, 1
-            self.__cdf_values, self.__cdf = map(tuple, zip(*iter_totals()))
+            # The type annotations for zip can't sort this one out.
+            results: Tuple[Tuple[Any, ...], Tuple[Probability, ...]]
+            results = map(tuple, zip(*iter_totals()))  # type: ignore[assignment]
+            self.__cdf_values, self.__cdf = results
         return self.__cdf
     @property
-    def _lcm(self):
-        def lcm(a, b):
-            return (a * b) // gcd(a, b)
+    def _lcm(self) -> int:
+        def lcm(a: int, b: int) -> int:
+            return (a // gcd(a, b)) * b
         if self.__lcm is None:
             result = 1
             for _, prob in self._items():
@@ -260,7 +264,7 @@ class DRV(object):
         idx = bisect_left(self.cdf, sample)
         return self.__cdf_values[idx]
     @property
-    def _intvalued(self):
+    def _intvalued(self) -> bool:
         if self.__intvalued is None:
             self.__intvalued = all(isinstance(x, int) for x in self.__dist)
         return self.__intvalued
@@ -328,7 +332,7 @@ class DRV(object):
             return (self + -right).replace_tree(tree)
         else:
             return self._apply2(operator.sub, right, connective='-')
-    def __mul__(self, right):
+    def __mul__(self, right: Any) -> 'DRV':
         """
         Handler for :code:`self * right`.
 
@@ -478,7 +482,7 @@ class DRV(object):
             .apply(operator.not_)
             .replace_tree(self._combine(self, right, '!='))
         )
-    def __bool__(self):
+    def __bool__(self) -> NoReturn:
         # Prevent DRVs being truthy, and hence "3 in [DRV({2: 1})]" is true.
         raise ValueError('The truth value of a random variable is ambiguous')
     def __le__(self, right: Any) -> 'DRV':

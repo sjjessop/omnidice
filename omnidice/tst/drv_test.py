@@ -2,6 +2,7 @@
 from fractions import Fraction
 import itertools
 from math import sqrt
+from typing import cast
 from unittest.mock import Mock, patch
 
 import pytest
@@ -10,7 +11,7 @@ from omnidice import drv
 from omnidice.drv import DRV, p
 from omnidice.expressions import Atom
 
-def test_sample():
+def test_sample() -> None:
     """
     DRV with float probabilities uses random(). With Fraction uses randrange().
     """
@@ -26,7 +27,7 @@ def test_sample():
     mock.random.side_effect = TypeError()
     assert drv.sample(random=mock) is True
 
-def test_matmul():
+def test_matmul() -> None:
     """
     The @ operator can be used with an integer or DRV on the left, and a DRV
     (but not an integer) on the right.
@@ -34,25 +35,25 @@ def test_matmul():
     drv = DRV({1: 0.5, 2: 0.5})
     assert (1 @ drv).to_dict() == drv.to_dict()
     with pytest.raises(TypeError):
-        1.0 @ drv
+        1.0 @ drv  # type: ignore[operator]
     with pytest.raises(TypeError):
-        drv @ 1
+        drv @ 1  # type: ignore[operator]
     with pytest.raises(TypeError):
-        drv @ 1.0
+        drv @ 1.0  # type: ignore[operator]
     assert (drv @ drv).to_dict() == {1: 0.25, 2: 0.375, 3: 0.25, 4: 0.125}
     # The difference with a non-int-valued DRV is you can't put it on the left.
     float_drv = DRV({1.0: 0.5, 2.0: 0.5})
     assert (1 @ float_drv).to_dict() == float_drv.to_dict()
     with pytest.raises(TypeError):
-        1.0 @ drv
+        1.0 @ drv  # type: ignore[operator]
     with pytest.raises(TypeError):
-        float_drv @ 1
+        float_drv @ 1  # type: ignore[operator]
     with pytest.raises(TypeError):
-        float_drv @ 1.0
+        float_drv @ 1.0  # type: ignore[operator]
     with pytest.raises(TypeError):
         float_drv @ float_drv
 
-def test_matmul_non_numeric():
+def test_matmul_non_numeric() -> None:
     """
     The @ operator still works if the possible values aren't numbers, provided
     they can be added together using the + operator.
@@ -60,7 +61,7 @@ def test_matmul_non_numeric():
     coin = DRV({'H': 0.5, 'T': 0.5})
     assert (2 @ coin).to_dict() == {x: 0.25 for x in ('HH', 'TT', 'HT', 'TH')}
 
-def test_bad_probabilities():
+def test_bad_probabilities() -> None:
     """
     Probabilities passed to the constructor must be between 0 and 1.
     """
@@ -75,7 +76,7 @@ def test_bad_probabilities():
     # They don't have to add up to exactly 1, though
     DRV({1: 0.333, 2: 0.333, 3: 0.333})
 
-def test_apply():
+def test_apply() -> None:
     """
     For calculations not supported by operator overloading, you can use the
     apply() function to re-map the generated values. It can be a many-to-one
@@ -84,13 +85,13 @@ def test_apply():
     d6 = DRV({x: 1 / 6 for x in range(1, 7)})
     assert d6.apply(lambda x: x @ d6, allow_drv=True).is_close(d6 @ d6)
 
-def test_convolve():
+def test_convolve() -> None:
     """
     There is an optimisation which uses numpy.convolve for large additions.
     Run some bigger jobs, to make sure it all works correctly.
     """
-    def check(result):
-        result = result.to_dict()
+    def check(result_drv: drv.DRV) -> None:
+        result = result_drv.to_dict()
         assert set(result) == set(range(2, 2001))
         for idx in range(2, 1002):
             assert result[idx] == pytest.approx((idx - 1) / 1E6)
@@ -103,7 +104,7 @@ def test_convolve():
     sparse = d1000.apply(lambda x: x * 1000)
     check((sparse + sparse).apply(lambda x: x // 1000))
 
-def test_tree():
+def test_tree() -> None:
     """
     Extra tests for DRV expression trees, mainly for code coverage.
     """
@@ -118,9 +119,9 @@ def test_tree():
     assert (-drv).to_dict() == {-1: Fraction(1, 2), -2: Fraction(1, 2)}
 
     class Addable(object):
-        def __init__(self, value):
+        def __init__(self, value: int):
             self.value = value
-        def __add__(self, other):
+        def __add__(self, other: object) -> int:
             return self.value
 
     # Test the case of adding None to a DRV with an expression tree. This
@@ -137,7 +138,7 @@ def test_tree():
     drv = DRV({Addable(1): Fraction(1, 2), Addable(2): Fraction(1, 2)})
     assert repr(drv + None) == 'DRV({1: Fraction(1, 2), 2: Fraction(1, 2)})'
 
-def test_convolve_switch():
+def test_convolve_switch() -> None:
     """
     There's a switch to enable/disable the numpy.convolve optimisation.
 
@@ -155,14 +156,14 @@ def test_convolve_switch():
     assert result1.keys() == result2.keys()
     assert list(result1.values()) == list(map(pytest.approx, result2.values()))
 
-def test_p():
+def test_p() -> None:
     """
     The p function returns the probability that a boolean DRV is True.
     """
     coins = (10 @ DRV({0: 0.5, 1: 0.5}))
     assert drv.p(coins <= 0) == 0.5 ** 10
     assert drv.p(coins >= 10) == 0.5 ** 10
-    assert drv.p(coins >= 5) > 0.5
+    assert drv.p(coins >= 5) > 0.5  # type: ignore[operator]
     assert drv.p(coins >= 5) + drv.p(coins < 5) == 1
     # Non-boolean input is rejected, even though 0 == False and 1 == True
     with pytest.raises(TypeError):
@@ -171,7 +172,7 @@ def test_p():
     assert drv.p(DRV({False: 1})) == 0
     assert drv.p(DRV({True: 1})) == 1
 
-def test_is_same():
+def test_is_same() -> None:
     """
     The is_same() method tells you whether two objects represent the same
     distribution.
@@ -192,7 +193,7 @@ def test_is_same():
     assert small.is_same(unordered)
     assert not small.is_same(approx)
 
-def test_is_close():
+def test_is_close() -> None:
     """
     The is_close() method tells you whether two objects represent approximately
     the same distribution.
@@ -216,7 +217,7 @@ def test_is_close():
         if a.is_same(b):
             assert a.is_close(b), (a, b)
 
-def test_equality():
+def test_equality() -> None:
     """
     Equality operators are already tested by dice_tests.py, but here we check
     some corner cases.
@@ -234,7 +235,7 @@ def test_equality():
     with pytest.raises(ValueError):
         1 in [cheat, var]
 
-def test_weighted():
+def test_weighted() -> None:
     """
     You can compute a DRV from disjoint cases.
     """
@@ -246,18 +247,18 @@ def test_weighted():
     # So, var2 should be uniformly distributed
     assert var2.is_same(DRV({x: 0.25 for x in range(1, 5)}))
 
-def test_given():
+def test_given() -> None:
     """
     Conditional probability distribution, given that some predicate is true.
     """
     var = DRV({x: 0.125 for x in range(8)})
-    var_odd = var.given(lambda x: x % 2 != 0)
-    var_even = var.given(lambda x: x % 2 == 0)
+    var_odd = var.given(lambda x: cast(int, x) % 2 != 0)
+    var_even = var.given(lambda x: cast(int, x) % 2 == 0)
     assert p(var_odd == 2) == 0
     assert p(var_odd == 1) == 0.25
     assert p(var_even == 2) == 0.25
     assert p(var_even == 1) == 0
-    var_square = var.given(lambda x: int(sqrt(x)) ** 2 == x)
+    var_square = var.given(lambda x: int(sqrt(cast(int, x))) ** 2 == cast(int, x))
     assert p(var_square == 0) == pytest.approx(1/3)
     with pytest.raises(ZeroDivisionError):
-        var.given(lambda x: x == 8)
+        var.given(lambda x: cast(int, x) == 8)

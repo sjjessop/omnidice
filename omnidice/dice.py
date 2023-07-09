@@ -23,28 +23,28 @@ class d(DRV):
             tree=Atom(f'd{sides}' if sides in preset_dice else f'd({sides})')
         )
     @property
-    def _intvalued(self):
+    def _intvalued(self) -> bool:
         return True
     # This is subtle. Because of some rules in Python to help subclasses
     # override operators successfully, we have to suppress the comparisons.
     # Otherwise some_drv < d(6) gets evaluated as d(6) > some_drv, which is
     # functionally equivalent but rather confusing when you see the repr.
     # https://docs.python.org/3/reference/datamodel.html#object.__lt__
-    def _compare(self, other, op):
+    def _compare(self, other: object, op: str) -> DRV:
         if isinstance(other, DRV) and not isinstance(other, d):
             return NotImplemented
-        return getattr(super(), op)(other)
-    def __le__(self, other):
+        return getattr(super(), op)(other)  # type: ignore[no-any-return]
+    def __le__(self, other: object) -> DRV:
         return self._compare(other, '__le__')
-    def __lt__(self, other):
+    def __lt__(self, other: object) -> DRV:
         return self._compare(other, '__lt__')
-    def __ge__(self, other):
+    def __ge__(self, other: object) -> DRV:
         return self._compare(other, '__ge__')
-    def __gt__(self, other):
+    def __gt__(self, other: object) -> DRV:
         return self._compare(other, '__gt__')
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> DRV:  # type: ignore[override]
         return self._compare(other, '__eq__')
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> DRV:  # type: ignore[override]
         return self._compare(other, '__ne__')
 
 def roll(drv: DRV) -> Any:

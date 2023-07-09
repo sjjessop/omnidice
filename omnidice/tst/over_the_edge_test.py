@@ -1,5 +1,6 @@
 
 from fractions import Fraction
+from typing import Any
 
 import pytest
 
@@ -10,7 +11,7 @@ from omnidice.pools import pool as Pool
 from omnidice.systems import over_the_edge as ote
 
 @pytest.mark.parametrize('dice', range(1, 7))
-def test_total(dice):
+def test_total(dice: int) -> None:
     """
     Get the result of a roll.
     """
@@ -23,7 +24,7 @@ def test_total(dice):
         drop_highest(1, d6, count=dice+1).apply(sum),
     )
 
-def test_empty():
+def test_empty() -> None:
     """
     Empty pools make no sense. Especially with the "Botch" and/or "Unstoppable
     Six" optional rules, since no dice is simultaneously all 1s and all 6s.
@@ -34,7 +35,7 @@ def test_empty():
         ote.pool(0)
 
 @pytest.mark.parametrize('dice', range(1, 7))
-def test_pool(dice):
+def test_pool(dice: int) -> None:
     """
     Get the individual dice, for playing with the optional rules.
     """
@@ -47,7 +48,7 @@ def test_pool(dice):
         drop_highest(1, d6, count=dice+1)
     )
 
-def test_botch():
+def test_botch() -> None:
     """
     total() reports a botch as -1. pool() reports a single -1.
     """
@@ -70,7 +71,7 @@ def test_botch():
     assert p(ote.pool(2, bonus=1, botch=True) == botch) == bonus_prob
     assert p(ote.pool(2, bonus=-1, botch=True) == botch) == pen_prob
 
-def test_explode():
+def test_explode() -> None:
     """
     The "Blowing the top" rule doesn't require any special result values, it
     just adds an exploding d6 sometimes.
@@ -80,9 +81,9 @@ def test_explode():
     bonus_prob = Fraction(1 + 3 * 5, 216)
     pen_prob = Fraction(1, 216)
 
-    def low(result):
+    def low(result: int) -> bool:
         return result < 12
-    def high(result):
+    def high(result: int) -> bool:
         return result >= 12
 
     assert ote.total(2, explode=True).given(low).is_same(
@@ -101,9 +102,9 @@ def test_explode():
     assert p(ote.total(2, bonus=1, explode=True) > 12) == bonus_prob
     assert p(ote.total(2, bonus=-1, explode=True) > 12) == pen_prob
 
-    def short(result):
+    def short(result: Any) -> bool:
         return len(result.values) == 2
-    def long(result):
+    def long(result: Any) -> bool:
         return len(result.values) == 3
 
     assert ote.pool(2, explode=True).given(short).is_same(
@@ -123,7 +124,7 @@ def test_explode():
     assert p(ote.pool(2, bonus=-1, explode=True).apply(sum) > 12) == pen_prob
 
 @pytest.mark.parametrize('dice', range(1, 4))
-def test_unstoppable(dice):
+def test_unstoppable(dice: int) -> None:
     """
     unstoppable() can be applied to a pool to tell you both the total and the
     existence (or not) of 6s.
@@ -138,7 +139,7 @@ def test_unstoppable(dice):
     assert drv.apply(lambda x: x.total).is_same(drv.apply(sum))
     assert p(drv.apply(lambda x: not x.unstoppable)) == Fraction(5, 6) ** dice
 
-def test_unstoppable_explosion():
+def test_unstoppable_explosion() -> None:
     """
     An exploded 6 counts as unstoppable.
     """

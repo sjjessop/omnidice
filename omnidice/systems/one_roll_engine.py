@@ -86,7 +86,7 @@ class Match(object):
     """
     width: int
     height: int
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.width}x{self.height}'
     @classmethod
     def from_group(cls, value: int, items: Iterable[int]) -> 'Match':

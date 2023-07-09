@@ -284,7 +284,7 @@ class PlainResult(Result):
 def pool(
     *drvs: DRV, count: int = 1,
     result_type: Type[Result] = PlainResult,
-    normalize: Optional[Callable[[Tuple[T, ...]], Iterable[T]]] = None,
+    normalize: Optional[Callable[[Tuple[CT, ...]], Iterable[CT]]] = None,
 ) -> DRV:
     """
     A "dice pool" as used in various games. This is a DRV whose possible values
@@ -374,12 +374,14 @@ def pool(
         summands = itertools.repeat(drvs[0], count)
     elif count != 1:
         raise TypeError('Must specify exactly 1 DRV to specify count')
-    # Empty pool
     if normalize is not None:
         class RType(PlainResult):
-            def normalize(self, values):
+            def normalize(self, values: Tuple[CT, ...]) -> Iterable[CT]:
+                # For the benefit of mypy
+                assert normalize is not None
                 return normalize(values)
         result_type = RType
+    # Empty pool
     pool = DRV({result_type(): 1})
     # Would use sum(), but it's allowed to reject non-numeric values
     for drv in summands:
@@ -412,7 +414,7 @@ def KeepHighest(keep: int) -> Type[PlainResult]:
     if keep < 0:
         raise ValueError(keep)
     class Highest(PlainResult):
-        def normalize(self, values):
+        def normalize(self, values: Tuple[CT, ...]) -> Iterable[CT]:
             # Could use heapq.nlargest for this, which would be an optimisation
             # when keep is much smaller than the full size. But because of
             # drop_lowest, and because of the fact we're usually adding one
@@ -430,7 +432,7 @@ def KeepLowest(keep: int) -> Type[PlainResult]:
     if keep < 0:
         raise ValueError(keep)
     class Lowest(PlainResult):
-        def normalize(self, values):
+        def normalize(self, values: Tuple[CT, ...]) -> Iterable[CT]:
             if keep == 0:
                 return ()
             else:

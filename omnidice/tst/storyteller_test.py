@@ -5,7 +5,7 @@ from omnidice.drv import DRV, p
 from omnidice.systems import storyteller
 
 @pytest.mark.parametrize('target', range(2, 11))
-def test_standard(target):
+def test_standard(target: int) -> None:
     """Difficulty 2 - 10"""
     expected = DRV({
         -1: 0.1,
@@ -19,7 +19,7 @@ def test_standard(target):
     assert revised_die.apply(storyteller.total).is_close(expected)
 
 @pytest.mark.parametrize('target', range(11, 20))
-def test_impossible(target):
+def test_impossible(target: int) -> None:
     """Difficulty is capped at 10"""
     expected = storyteller.standard(10)
     die = storyteller.standard(target)
@@ -29,7 +29,7 @@ def test_impossible(target):
     assert revised_die.apply(storyteller.total).is_close(expected)
 
 @pytest.mark.parametrize('target', range(-10, 2))
-def test_easy(target):
+def test_easy(target: int) -> None:
     """Difficulty is capped at 2"""
     die = storyteller.standard(target)
     expected = storyteller.standard(2)
@@ -38,7 +38,7 @@ def test_easy(target):
     revised_die = storyteller.revised_standard(target)
     assert revised_die.apply(storyteller.total).is_close(expected)
 
-def test_special():
+def test_special() -> None:
     """
     With a specialty you can re-roll 10s. 1s on the reroll do *not* count as
     botches.
@@ -63,7 +63,7 @@ def test_special():
     assert revised_die.is_close(DRV(probs))
     assert sum(revised_die.to_dict().values()) == 1
 
-def test_revised_botch():
+def test_revised_botch() -> None:
     """
     The botch rule is different in Revised. Now if you roll at least one
     success, you cannot botch, even if it's cancelled out by 1s.

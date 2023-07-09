@@ -2,6 +2,7 @@
 from fractions import Fraction
 import math
 import os
+from typing import Dict, Tuple
 
 import pytest
 
@@ -30,7 +31,7 @@ expected_counts = {
 }
 
 @pytest.mark.parametrize('dice, count', expected_counts.items())
-def test_matches(dice, count):
+def test_matches(dice: int, count: int) -> None:
     """
     Check that we have the right number of values in each distribution.
     """
@@ -45,7 +46,7 @@ def test_matches(dice, count):
         # (11 - dice) is because with 2 dice the highest must be 2-10, etc.
         assert len(ore.matches(d=dice).to_dict()) == count - (11 - dice) + 1
 
-def test_allow_highest():
+def test_allow_highest() -> None:
     """
     Check that allow_highest has the correct effect.
     """
@@ -58,7 +59,7 @@ def test_allow_highest():
     # "widthxheight", as used in the rules.
     assert allowed.apply(repr).is_same(d10.apply(lambda x: f'(1x{x},)'))
 
-def test_hard():
+def test_hard() -> None:
     """
     Hard dice can be added to the pool.
     """
@@ -68,18 +69,19 @@ def test_hard():
         (): 9 / 10,
     }))
     # 2d + hd is still small enough to figure out easily...
-    assert ore.matches(d=2, hd=1).is_close(DRV({
+    distribution: Dict[Tuple[ore.Match, ...], float] = {
         (ore.Match(3, 10),): 1 / 100,
         (ore.Match(2, 10),): 18 / 100,
         **{(ore.Match(2, n),): 1 / 100 for n in range(1, 10)},
         (): 72 / 100,
-    }))
+    }
+    assert ore.matches(d=2, hd=1).is_close(DRV(distribution))
     # 3d + hd: now we can get two pairs of 10 and something else.
     result = p(ore.matches(d=3, hd=1).apply(len) == 2)
     assert result == pytest.approx(9 * 3 / 1000)
 
 @pytest.mark.parametrize('diff', range(1, 11))
-def test_difficulty(diff):
+def test_difficulty(diff: int) -> None:
     """
     Setting a difficulty means that some matching sets don't count.
     """
@@ -88,19 +90,19 @@ def test_difficulty(diff):
     # You wouldn't normally allow_highest and then require a matching set, but
     # since the probability is the same, we may as well check it.
     pool = ore.matches(2, difficulty=diff, allow_highest=True)
-    def success(matches):
+    def success(matches: Tuple[ore.Match]) -> bool:
         return matches[0].width > 1
     assert p(pool.apply(success)) == Fraction(11 - diff, 100)
     # If you rolled at least one die over the difficulty, but still failed,
     # then the difficulty actually makes no difference to your distribution.
-    def failure(matches):
+    def failure(matches: Tuple[ore.Match]) -> bool:
         return not success(matches) and matches[0].height >= diff
     assert pool.given(failure).is_same(
         ore.matches(2, allow_highest=True).given(failure)
     )
     # That leaves cases where all dice were less than the difficulty. The
     # probability and distribution of that is an easy one to check.
-    def woeful(matches):
+    def woeful(matches: Tuple[ore.Match]) -> bool:
         return not success(matches) and matches[0].height < diff
     assert p(pool.apply(woeful)) == Fraction(diff - 1, 10)**2
     if diff > 1:
@@ -111,7 +113,7 @@ def test_difficulty(diff):
             Pool(d(diff - 1), count=2).apply(max)
         )
 
-def test_belle_curve():
+def test_belle_curve() -> None:
     """
     There's a helpful table in the Godlike rulebook giving the probability of
     at least one match. This is based on the number of possible permutations of
@@ -128,36 +130,36 @@ def test_belle_curve():
         # you could roll them in.
         return math.factorial(10) // math.factorial(10 - d)
     result = p(ore.matches(4).apply(len) > 0)
-    assert 0.495 <= result < 0.505
+    assert 0.495 <= result < 0.505  # type: ignore[operator]
     assert 1 - result == Fraction(combinations(4), 10**4)
     if SIZE_LIMIT >= 5:
         result = p(ore.matches(5).apply(len) > 0)
-        assert 0.695 <= result < 0.705
+        assert 0.695 <= result < 0.705  # type: ignore[operator]
         assert 1 - result == Fraction(combinations(5), 10**5)
     if SIZE_LIMIT >= 6:
         result = p(ore.matches(6).apply(len) > 0)
-        assert 0.845 <= result < 0.855
+        assert 0.845 <= result < 0.855  # type: ignore[operator]
         assert 1 - result == Fraction(combinations(6), 10**6)
     if SIZE_LIMIT >= 7:
         # Book got this one wrong: it says 93% but it's 93.952%
         result = p(ore.matches(7).apply(len) > 0)
-        assert 0.93 <= result < 0.94
+        assert 0.93 <= result < 0.94  # type: ignore[operator]
         assert 1 - result == Fraction(combinations(7), 10**7)
     if SIZE_LIMIT >= 8:
         result = p(ore.matches(8).apply(len) > 0)
-        assert 0.975 <= result < 0.985
+        assert 0.975 <= result < 0.985  # type: ignore[operator]
         assert 1 - result == Fraction(combinations(8), 10**8)
     if SIZE_LIMIT >= 9:
         result = p(ore.matches(9).apply(len) > 0)
-        assert 0.9955 <= result < 0.9965
+        assert 0.9955 <= result < 0.9965  # type: ignore[operator]
         assert 1 - result == Fraction(combinations(9), 10**9)
     if SIZE_LIMIT >= 10:
         # Book rounded this one wrong too, it's actually 99.963712%
         result = p(ore.matches(10).apply(len) > 0)
-        assert 0.9985 <= result
+        assert 0.9985 <= result  # type: ignore[operator]
         assert 1 - result == Fraction(combinations(10), 10**10)
 
-def test_wiggle():
+def test_wiggle() -> None:
     """
     Wiggle dice have the potential to be difficult to implement. The
     documentation lays out what's available to handle them.
@@ -179,12 +181,12 @@ def test_wiggle():
     )
     assert p(drv.apply(lambda x: ore.Match(4, 10) in x)) == Fraction(1, 1000)
 
-def test_pool_examples():
+def test_pool_examples() -> None:
     """
     Check the examples of using pool() do vaguely work.
     """
     # First example of penalty die
-    def penalty(result):
+    def penalty(result: PlainResult) -> PlainResult:
         return PlainResult(*(tuple(result)[1:]))
 
     penalised = ore.pool(1).apply(penalty).apply(ore.Match.get_matches)
@@ -198,7 +200,7 @@ def test_pool_examples():
         .apply(lambda x: ore.Match(1, next(iter(x))))
     )
     # Second example of penalty die
-    def penalty(result):
+    def penalty2(result: PlainResult) -> PlainResult:
         matches = sorted(
             ore.Match.get_all_sets(result),
             key=lambda x: (x.width, x.height),
@@ -209,15 +211,15 @@ def test_pool_examples():
             for match in matches
             for die in [match.height] * match.width
         ))
-    penalised = ore.pool(1).apply(penalty).apply(ore.Match.get_matches)
+    penalised = ore.pool(1).apply(penalty2).apply(ore.Match.get_matches)
     assert penalised.is_same(DRV({(): 1}))
-    penalised = ore.pool(3).apply(penalty).apply(ore.Match.get_matches)
+    penalised = ore.pool(3).apply(penalty2).apply(ore.Match.get_matches)
     # Discarding from the narrowest match of 3 dice doesn't affect your chance
     # of success! Width 3 becomes width 2, and width 2 means there's an
     # unmatched third die to discard.
     assert p(penalised.apply(len) > 0) == p(ore.matches(3).apply(len) > 0)
 
-def test_pool_params():
+def test_pool_params() -> None:
     """Although not used in the examples, test the parameters."""
     assert ore.pool(1, hd=1).apply(ore.Match.get_matches).is_same(
         ore.matches(1, hd=1)
