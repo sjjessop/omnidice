@@ -23,7 +23,7 @@ copyright = '2020, Steve Jessop'
 author = 'Steve Jessop'
 
 # The full version, including alpha/beta/rc tags
-release = '1.2.2'
+release = '1.3.0'
 
 
 # -- General configuration ---------------------------------------------------
