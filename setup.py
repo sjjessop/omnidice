@@ -15,7 +15,7 @@ setuptools.setup(
             'coverage>=5.2.1',
             'flake8',
             'isort',
-            'mypy>=0.812',
+            'mypy==1.4.1',
             'pytest-cov',
             'Pygments>=2.6.1',
             'sphinx>=3.3.0',
