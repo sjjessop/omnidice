@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
         exclude:
           - os: ubuntu-latest
             python: "3.7"
@@ -53,6 +53,9 @@ jobs:
         env:
           OMNIDICE_TST_ORE_SIZE_LIMIT: 10
         run: pytest --cov=omnidice --cov-branch --cov-append --cov-report=xml --cov-report=term
+
+      - name: Install setuptools
+        run: pip install setuptools
 
       - name: Build wheel
         run: python setup.py bdist_wheel

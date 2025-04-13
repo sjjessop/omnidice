@@ -17,8 +17,8 @@ variables. `Current release documentation <https://omnidice.readthedocs.io/>`_.
    :alt: codecov
    :target: https://codecov.io/gh/sjjessop/omnidice
 
-.. image:: https://img.shields.io/badge/3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg
-   :alt: Python versions 3.8 3.9 3.10 3.11
+.. image:: https://img.shields.io/badge/3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg
+   :alt: Python versions 3.8 3.9 3.10 3.11 3.12 3.13
    :target: https://www.python.org/downloads/
 
 .. image:: https://img.shields.io/badge/badges-5-green.svg
@@ -348,6 +348,13 @@ Changelog
 
 Version 1.4.0 (unpublished)
 ---------------------------
+
+Features
+~~~~~~~~
+
+No changes to API, but:
+
+* Python 3.12 and 3.13 are now supported, and added to the test matrix.
 
 Dependencies
 ~~~~~~~~~~~~
