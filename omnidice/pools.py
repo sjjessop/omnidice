@@ -174,7 +174,7 @@ class Result(ABC, abc.Iterable):
     def __eq__(self, other: Any) -> bool:
         return type(self) is type(other) and self.values == other.values
     def __ne__(self, other: Any) -> bool:
-        return type(self) != type(other) or self.values != other.values
+        return type(self) is not type(other) or self.values != other.values
     @classmethod
     def _from(cls: Type[RT], other: 'Result') -> RT:
         """

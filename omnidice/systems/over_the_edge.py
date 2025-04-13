@@ -58,7 +58,7 @@ def _get_extra(explode: Union[bool, int]) -> DRV:
 
 def _add_extra(explode: Union[bool, int], result: DRV, blown: Any) -> DRV:
     extra = _get_extra(explode)
-    if type(blown) != int:
+    if type(blown) is not int:
         extra = extra.apply(type(blown))
     extra += blown
     return result.apply(lambda x: extra if x == blown else x, allow_drv=True)
