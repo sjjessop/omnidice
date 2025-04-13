@@ -346,8 +346,9 @@ It should work with pretty much any versions of its optional dependencies,
 Changelog
 =========
 
-Version 1.4.0 (unpublished)
----------------------------
+
+Version 1.4.0 (2024-04-13)
+--------------------------
 
 Features
 ~~~~~~~~
