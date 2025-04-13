@@ -17,8 +17,8 @@ variables. `Current release documentation <https://omnidice.readthedocs.io/>`_.
    :alt: codecov
    :target: https://codecov.io/gh/sjjessop/omnidice
 
-.. image:: https://img.shields.io/badge/3.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg
-   :alt: Python versions 3.7 3.8 3.9 3.10 3.11
+.. image:: https://img.shields.io/badge/3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-blue.svg
+   :alt: Python versions 3.8 3.9 3.10 3.11
    :target: https://www.python.org/downloads/
 
 .. image:: https://img.shields.io/badge/badges-5-green.svg
@@ -337,11 +337,24 @@ f-strings, variable annotations, and possibly other features new in 3.6.
 The last version of omnidice that was tested with Python version 3.6 is v1.2.2
 Support for Python 3.6 is removed in v1.3.0
 
+The last version of omnidice that was tested with Python version 3.7 is v1.3.0.
+Support for Python 3.7 is removed in v1.4.0
+
 It should work with pretty much any versions of its optional dependencies,
 ``numpy`` and ``pandas``.
 
 Changelog
 =========
+
+Version 1.4.0 (unpublished)
+---------------------------
+
+Dependencies
+~~~~~~~~~~~~
+
+* Python 3.7 is removed from the Ubuntu test matrix. It's still tested on
+  Windows, so is left in the supported Python versions for now.
+
 
 Version 1.3.0 (2023-07-09)
 --------------------------
